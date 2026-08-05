@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Booking extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'client_id',
+        'court_id',
+        'booking_date',
+        'start_time',
+        'end_time',
+        'status',
+        'total_amount',
+        'notes',
+    ];
+
+    protected $casts = [
+        'booking_date' => 'date',
+        'total_amount' => 'decimal:2',
+    ];
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
+
+    public function court(): BelongsTo
+    {
+        return $this->belongsTo(Court::class);
+    }
+}

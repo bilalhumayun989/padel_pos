@@ -1,0 +1,267 @@
+import React from 'react';
+import { Head } from '@inertiajs/react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import {
+    DollarSign,
+    Calendar,
+    Coffee,
+    Wallet,
+    Trophy,
+    Package,
+    TrendingUp,
+    ChevronRight,
+    ShieldCheck,
+    PauseCircle,
+    Plus,
+    Sparkles,
+    Activity,
+    Clock
+} from 'lucide-react';
+
+export default function Dashboard({ metrics, teams = [], recentBookings = [], facility }) {
+    // Fallback values matching reference UI image
+    const data = {
+        revenue_today: metrics?.revenue_today ?? 1560,
+        revenue_trend: metrics?.revenue_trend ?? 12,
+        today_bookings: metrics?.today_bookings ?? 36,
+        bookings_trend: metrics?.bookings_trend ?? 9,
+        cafe_revenue: metrics?.cafe_revenue ?? 120,
+        cafe_trend: metrics?.cafe_trend ?? 6,
+        expenses: metrics?.expenses ?? 43,
+        expenses_trend: metrics?.expenses_trend ?? 6,
+        players_percentage: metrics?.players_percentage ?? 84,
+        players_trend: metrics?.players_trend ?? 6,
+        stock_percentage: metrics?.stock_percentage ?? 84,
+        stock_trend: metrics?.stock_trend ?? 6,
+    };
+
+    const formatCurrency = (value) => {
+        return `PKR ${Math.round(value).toLocaleString()}`;
+    };
+
+    const statCards = [
+        {
+            title: 'Revenue Today',
+            value: formatCurrency(data.revenue_today),
+            trend: `${data.revenue_trend}% vs Yesterday`,
+            icon: DollarSign,
+        },
+        {
+            title: 'Today Bookings',
+            value: data.today_bookings,
+            trend: `${data.bookings_trend}% vs Yesterday`,
+            icon: Calendar,
+        },
+        {
+            title: 'Cafe Revenue',
+            subtitle: 'Today\'s',
+            value: formatCurrency(data.cafe_revenue),
+            trend: `${data.cafe_trend}% vs Yesterday`,
+            icon: Coffee,
+        },
+        {
+            title: 'Expenses',
+            value: Math.round(data.expenses),
+            trend: `${data.expenses_trend}% vs Yesterday`,
+            icon: Wallet,
+        },
+        {
+            title: 'Players',
+            value: `${data.players_percentage}%`,
+            trend: `${data.players_trend}% vs Yesterday`,
+            icon: Trophy,
+        },
+        {
+            title: 'Stock',
+            value: `${data.stock_percentage}%`,
+            trend: `${data.stock_trend}% vs Yesterday`,
+            icon: Package,
+        },
+    ];
+
+    const teamList = teams.length > 0 ? teams : [
+        { id: 1, name: 'Team Alpha', players_count: 12, ready_ratio: '4/4', active: true },
+        { id: 2, name: 'Team Smashers', players_count: 12, ready_ratio: '4/4', active: false },
+    ];
+
+    const bookingsList = recentBookings.length > 0 ? recentBookings : [
+        { id: 1, name: 'Umar Iqbal', status: 'Active', last_visit: 'Today' },
+        { id: 2, name: 'Saad khalid', status: 'Active', last_visit: 'Yesterday' },
+        { id: 3, name: 'Zohaib', status: 'Paused', last_visit: '3 Days Ago' },
+        { id: 4, name: 'Fahad', status: 'Active', last_visit: 'Today' },
+    ];
+
+    return (
+        <AuthenticatedLayout facility={facility}>
+            <Head title="Padel POS - Dashboard" />
+
+            <div className="flex flex-col flex-1 w-full gap-4">
+
+                {/* ── Upper Section ── Hero banner (left) + Active Teams (right) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+
+                    {/* Left 8 Cols: transparent hero — NO glass, so the court image shows through */}
+                    <div className="lg:col-span-8 relative rounded-3xl overflow-hidden flex flex-col justify-between min-h-[260px] sm:min-h-[300px] xl:min-h-[340px]">
+                        {/* Soft dark scrim only at bottom so text stays readable */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent rounded-3xl pointer-events-none" />
+
+                        {/* Content sits on top */}
+                        <div className="relative z-10 p-5 sm:p-6 flex flex-col h-full justify-between">
+                            <div>
+                                <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-lime-400/20 text-lime-400 border border-lime-400/30 flex items-center gap-1 shadow-[0_0_10px_rgba(163,230,53,0.2)] backdrop-blur-sm">
+                                            <Sparkles className="w-3 h-3 animate-pulse" /> Live Arena Overview
+                                        </span>
+                                        <span className="text-xs text-gray-200 font-medium drop-shadow">Today's Schedule</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-xs text-gray-200 bg-black/30 backdrop-blur-sm px-3 py-1 rounded-full border border-white/15">
+                                        <Clock className="w-3.5 h-3.5 text-lime-400" />
+                                        <span>Peak Hours: 6:00 PM – 10:00 PM</span>
+                                    </div>
+                                </div>
+
+                                <h1 className="text-2xl sm:text-3xl xl:text-4xl font-bold text-white tracking-tight drop-shadow-lg">
+                                    Welcome back, <span className="text-lime-400">Skyline Arena Admin</span> 👋
+                                </h1>
+                                <p className="text-xs sm:text-sm text-gray-200 mt-1.5 max-w-xl drop-shadow">
+                                    Facility efficiency at <span className="text-emerald-400 font-semibold">85%</span>. All 4 courts are booked — peak demand expected this evening.
+                                </p>
+                            </div>
+
+                            {/* Quick Action Pills */}
+                            <div className="flex flex-wrap items-center gap-2.5 mt-4 pt-3 border-t border-white/15">
+                                <button className="px-4 py-2 rounded-xl text-xs font-bold bg-lime-400 text-black hover:bg-lime-300 transition-all flex items-center gap-1.5 shadow-[0_0_18px_rgba(163,230,53,0.4)] cursor-pointer">
+                                    <Plus className="w-4 h-4" /> New Booking
+                                </button>
+                                <button className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:border-lime-400/50 hover:text-lime-400 transition-all flex items-center gap-1.5 cursor-pointer">
+                                    <Coffee className="w-4 h-4 text-lime-400" /> Cafe POS
+                                </button>
+                                <button className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:border-lime-400/50 hover:text-lime-400 transition-all flex items-center gap-1.5 cursor-pointer">
+                                    <Activity className="w-4 h-4 text-emerald-400" /> Court Live Status
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right 4 Cols: Active Teams widget — glass card */}
+                    <div className="lg:col-span-4 glass-card p-4 sm:p-5 rounded-3xl relative overflow-hidden flex flex-col justify-between min-h-[260px] sm:min-h-[300px]">
+                        <div className="flex items-center justify-between mb-3 relative z-10">
+                            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-300">Active Teams</h3>
+                            <span className="text-[10px] font-semibold text-lime-400 bg-lime-400/10 px-2 py-0.5 rounded-full border border-lime-400/20">Live</span>
+                        </div>
+
+                        <div className="space-y-2.5 relative z-10 flex-1 flex flex-col justify-center">
+                            {teamList.map((team, idx) => {
+                                const isHighlight = idx === 0 || team.active;
+                                return (
+                                    <div
+                                        key={team.id}
+                                        className={`p-3.5 rounded-2xl transition-all duration-300 flex items-center justify-between relative overflow-hidden ${
+                                            isHighlight ? 'glass-team-active' : 'glass-card-inner hover:border-white/20'
+                                        }`}
+                                    >
+                                        <div className="relative z-10">
+                                            <h4 className={`text-sm font-bold ${isHighlight ? 'text-emerald-400' : 'text-gray-100'}`}>
+                                                {team.name}
+                                            </h4>
+                                            <p className="text-xs text-gray-400 mt-0.5">{team.players_count} Players</p>
+                                        </div>
+                                        <div className="flex items-center gap-2 relative z-10">
+                                            <div className="flex -space-x-1.5 overflow-hidden">
+                                                <img className="inline-block h-6 w-6 rounded-full ring-2 ring-black/40 object-cover" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=64&q=80" alt="Player" />
+                                                <img className="inline-block h-6 w-6 rounded-full ring-2 ring-black/40 object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=64&q=80" alt="Player" />
+                                                <img className="inline-block h-6 w-6 rounded-full ring-2 ring-black/40 object-cover" src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=64&q=80" alt="Player" />
+                                            </div>
+                                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-lime-400/20 text-lime-400 border border-lime-400/30">
+                                                {team.ready_ratio || '4/4'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Bottom Section ── 6 Stat Cards + Recent Bookings */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+
+                    {/* 6 Stat Cards */}
+                    <div className="lg:col-span-8 grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {statCards.map((card, idx) => {
+                            const Icon = card.icon;
+                            return (
+                                <div
+                                    key={idx}
+                                    className="glass-stat-card p-4 xl:p-5 rounded-3xl flex flex-col justify-between relative overflow-hidden min-h-[130px] xl:min-h-[145px]"
+                                >
+                                    {/* lime ambient glow */}
+                                    <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-lime-400/10 blur-2xl pointer-events-none" />
+
+                                    <div className="flex items-center gap-2 relative z-10">
+                                        <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                        <div>
+                                            <h3 className="text-xs font-semibold text-gray-300 tracking-wide leading-tight">{card.title}</h3>
+                                            {card.subtitle && (
+                                                <span className="text-[10px] text-gray-500 block leading-tight">{card.subtitle}</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="relative z-10 my-1">
+                                        <span className="text-2xl xl:text-3xl font-bold text-lime-400 tracking-tight drop-shadow-[0_0_12px_rgba(163,230,53,0.4)]">
+                                            {card.value}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold relative z-10">
+                                        <TrendingUp className="w-3.5 h-3.5" />
+                                        <span>{card.trend}</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Recent Bookings */}
+                    <div className="lg:col-span-4 glass-card p-4 xl:p-5 rounded-3xl relative overflow-hidden flex flex-col">
+                        <div className="flex items-center justify-between mb-3 relative z-10">
+                            <h3 className="text-sm font-bold text-white tracking-wide">Recent Bookings</h3>
+                            <button className="glass-card-inner px-3 py-1 rounded-full text-[10px] font-semibold text-gray-200 hover:text-lime-400 border border-white/20 flex items-center gap-1 transition-all">
+                                View All <ChevronRight className="w-3 h-3" />
+                            </button>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1 relative z-10">
+                            <span>Clients</span>
+                            <span>Last Visit</span>
+                        </div>
+
+                        <div className="space-y-1 relative z-10 flex-1">
+                            {bookingsList.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="flex items-center justify-between py-2 px-2.5 text-xs border-b border-white/5 last:border-0 hover:bg-white/8 rounded-xl transition-all"
+                                >
+                                    <div className="flex items-center gap-2.5">
+                                        {item.status.toLowerCase() === 'active' ? (
+                                            <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                                        ) : (
+                                            <PauseCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                                        )}
+                                        <div>
+                                            <p className="font-semibold text-white">{item.name}</p>
+                                            <p className="text-[10px] text-gray-400">{item.status}</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-gray-400 font-medium text-[11px]">{item.last_visit}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </AuthenticatedLayout>
+    );
+}
