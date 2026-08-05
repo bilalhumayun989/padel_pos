@@ -15,7 +15,7 @@
 
 /* ─── Glass tokens ─────────────────────────────────────────────── */
 
-/* Legacy panel (sidebar, topbar pills, etc.) */
+/* Sidebar, topbar pills */
 .glass-panel {
   background: rgba(15, 22, 35, 0.52);
   backdrop-filter: blur(36px) saturate(190%);
@@ -24,16 +24,20 @@
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-/* Main frosted glass card — used for widgets & panels */
+/*
+ * Glass card — Active Teams & Recent Bookings panels.
+ * Key: isolation:isolate prevents parent stacking context from
+ * swallowing backdrop-filter. No overflow-hidden on these elements.
+ */
 .glass-card {
-  background: rgba(10, 16, 28, 0.45);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  background: rgba(8, 14, 26, 0.38);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
   border: 1px solid rgba(255, 255, 255, 0.13);
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.11);
+  isolation: isolate;
 }
 
 /* Nested inner card (team rows, view-all button, etc.) */
@@ -44,25 +48,30 @@
   border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
-/* Stat cards — slightly lighter so numbers pop over the image */
+/*
+ * Stat cards — low-opacity background so the court image bleeds through,
+ * strong blur so the frosted effect is clearly visible.
+ * No overflow-hidden on these elements in JSX.
+ */
 .glass-stat-card {
-  background: rgba(12, 20, 34, 0.50);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 18, 30, 0.32);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
   box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    0 8px 30px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  isolation: isolate;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-stat-card:hover {
-  background: rgba(18, 28, 46, 0.65);
+  background: rgba(16, 26, 44, 0.48);
   border-color: rgba(163, 230, 53, 0.35);
   box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.55),
+    0 16px 40px rgba(0, 0, 0, 0.48),
     0 0 22px rgba(163, 230, 53, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   transform: translateY(-2px);
 }
 
@@ -91,7 +100,7 @@
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-/* Kept for backward compat */
+/* Backward compat */
 .glass-panel-interactive {
   background: rgba(16, 24, 38, 0.55);
   backdrop-filter: blur(36px) saturate(190%);
