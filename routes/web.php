@@ -12,6 +12,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -29,6 +30,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/bookings/create', [BookingController::class, 'create'])->name('bookings.create');
     Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
     Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
+    Route::get('/products',         [ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/cafe',    [ProductController::class, 'cafe'])->name('products.cafe');
+    Route::get('/products/paddle',  [ProductController::class, 'paddle'])->name('products.paddle');
     Route::get('/history/sales',          [HistoryController::class, 'sales'])->name('history.sales');
     Route::get('/history/purchases',      [HistoryController::class, 'purchases'])->name('history.purchases');
     Route::get('/history/expenses',       [HistoryController::class, 'expenses'])->name('history.expenses');

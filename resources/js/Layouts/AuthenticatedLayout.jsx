@@ -18,7 +18,8 @@ import {
     X,
     CalendarDays,
     History,
-    Truck
+    Truck,
+    LayoutList
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, facility = { name: 'SKYLINE PADDLE COURT', subtext: 'Main Court' } }) {
@@ -51,7 +52,8 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
         { name: 'Stock',    routeName: 'stock.index',    icon: Package    },
         { name: 'Schedule', routeName: 'schedule.index', icon: CalendarDays },
         { name: 'History',  routeName: 'history.sales',  icon: History      },
-        { name: 'Suppliers', routeName: 'suppliers.index', icon: Truck },
+        { name: 'Suppliers', routeName: 'suppliers.index', icon: Truck      },
+        { name: 'Products',  routeName: 'products.cafe',  icon: LayoutList },
     ];
 
     const bottomNavItems = [
@@ -64,6 +66,9 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
             // Highlight History nav for both history sub-routes
             if (name === 'history.sales') {
                 return route().current('history.sales') || route().current('history.purchases') || route().current('history.expenses') || route().current('history.reconciliation');
+            }
+            if (name === 'products.cafe') {
+                return route().current('products.cafe') || route().current('products.paddle') || route().current('products.index');
             }
             return route().current(name);
         } catch {
