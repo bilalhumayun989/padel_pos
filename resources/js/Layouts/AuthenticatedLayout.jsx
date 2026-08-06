@@ -8,29 +8,46 @@ import {
     Package, 
     Settings, 
     Headphones, 
-    PanelLeftClose, 
+    PanelLeftClose,
     PanelLeftOpen,
     Bell,
     ChevronDown,
     LogOut,
     User as UserIcon,
     Menu,
-    X
+    X,
+    CalendarDays
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, facility = { name: 'SKYLINE PADDLE COURT', subtext: 'Main Court' } }) {
     const { auth } = usePage().props;
     const user = auth?.user || { name: 'Admin', email: 'admin@skylinepadel.com' };
-    const [collapsed, setCollapsed] = useState(false);
+    // Persist collapsed state across page navigations
+    const [collapsed, setCollapsed] = useState(() => {
+        try { return localStorage.getItem('sidebar_collapsed') === '1'; } catch { return false; }
+    });
     const [mobileOpen, setMobileOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [logoHovered, setLogoHovered] = useState(false);
+
+    const handleCollapse = () => {
+        setCollapsed(true);
+        setLogoHovered(false);
+        try { localStorage.setItem('sidebar_collapsed', '1'); } catch {}
+    };
+    const handleExpand = () => {
+        setCollapsed(false);
+        setLogoHovered(false);
+        try { localStorage.setItem('sidebar_collapsed', '0'); } catch {}
+    };
 
     const navItems = [
         { name: 'Dashboard', routeName: 'dashboard', icon: LayoutGrid },
         { name: 'Clients', routeName: 'clients.index', icon: Users },
         { name: 'Players', routeName: 'players.index', icon: Trophy },
-        { name: 'Cafe', routeName: '#cafe', icon: Coffee },
-        { name: 'Stock', routeName: '#stock', icon: Package },
+        { name: 'Cafe',  routeName: 'cafe.index',  icon: Coffee },
+        { name: 'Stock',    routeName: 'stock.index',    icon: Package    },
+        { name: 'Schedule', routeName: 'schedule.index', icon: CalendarDays },
     ];
 
     const bottomNavItems = [
@@ -56,7 +73,6 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
                     className="absolute inset-0 h-full w-full object-cover object-top"
                     style={{ objectPosition: 'center top' }}
                 />
-                {/* Subtle dark overlay — light enough so the image stays vivid */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/70" />
             </div>
 
@@ -76,26 +92,75 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
             >
                 {/* Top Section */}
                 <div className="space-y-6">
-                    {/* Sidebar Toggle */}
-                    <div className="flex items-center justify-between px-2 py-1">
-                        <button 
-                            onClick={() => setCollapsed(!collapsed)}
-                            className="hidden lg:block p-2 rounded-xl text-gray-400 hover:text-lime-400 hover:bg-white/10 transition-all"
-                            title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-                        >
-                            {collapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
-                        </button>
-                        <button 
+
+                    {/* ── Logo / Brand ── */}
+                    <div className="flex items-center justify-between px-1 py-1 min-h-[44px]">
+
+                        {/* ── EXPANDED STATE ── logo + name on left, close btn on right */}
+                        {!collapsed && (
+                            <>
+                                {/* Logo + name — static, never changes */}
+                                <div className="hidden lg:flex items-center gap-2.5">
+                                    <img
+                                        src="/images/logo.png"
+                                        alt="Paddle Pro"
+                                        className="w-8 h-8 object-contain rounded-xl flex-shrink-0"
+                                    />
+                                    <span className="text-sm font-extrabold text-white tracking-wide whitespace-nowrap">
+                                        Paddle <span className="text-lime-400">Pro</span>
+                                    </span>
+                                </div>
+
+                                {/* Collapse button — right side, same style as nav icons */}
+                                <button
+                                    onClick={handleCollapse}
+                                    className="hidden lg:flex items-center justify-center p-2 rounded-2xl text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                                    title="Collapse sidebar"
+                                >
+                                    <PanelLeftClose className="w-5 h-5" />
+                                </button>
+                            </>
+                        )}
+
+                        {/* ── COLLAPSED STATE ── just logo, hover swaps to expand icon */}
+                        {collapsed && (
+                            <button
+                                onClick={handleExpand}
+                                onMouseEnter={() => setLogoHovered(true)}
+                                onMouseLeave={() => setLogoHovered(false)}
+                                className="hidden lg:flex items-center justify-center mx-auto rounded-xl transition-all duration-200 focus:outline-none"
+                                title="Expand sidebar"
+                            >
+                                <div className="relative w-8 h-8">
+                                    {/* Logo — fades out on hover */}
+                                    <img
+                                        src="/images/logo.png"
+                                        alt="Paddle Pro"
+                                        className={`absolute inset-0 w-8 h-8 object-contain rounded-xl transition-all duration-200 ${
+                                            logoHovered ? 'opacity-0 scale-75' : 'opacity-100 scale-100'
+                                        }`}
+                                    />
+                                    {/* Expand icon — fades in on hover */}
+                                    <div className={`absolute inset-0 flex items-center justify-center transition-all duration-200 ${
+                                        logoHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
+                                    }`}>
+                                        <PanelLeftOpen className="w-5 h-5 text-gray-300" />
+                                    </div>
+                                </div>
+                            </button>
+                        )}
+
+                        {/* Mobile close */}
+                        <button
                             onClick={() => setMobileOpen(false)}
                             className="lg:hidden p-2 rounded-xl text-gray-400 hover:text-lime-400 hover:bg-white/10 transition-all"
-                            title="Close Sidebar"
                         >
                             <X className="w-5 h-5" />
                         </button>
                     </div>
 
                     {/* Navigation Links */}
-                    <nav className="space-y-2">
+                    <nav className="space-y-1">
                         {navItems.map((item) => {
                             const Icon = item.icon;
                             const active = isCurrentRoute(item.routeName);
@@ -105,18 +170,23 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
                                     href={item.routeName.startsWith('#') ? '#' : route(item.routeName)}
                                     prefetch
                                     onClick={() => setMobileOpen(false)}
-                                    className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all duration-200 font-medium ${
-                                        active 
-                                            ? 'glass-active-pill text-lime-400 font-bold shadow-[0_0_20px_rgba(163,230,53,0.25)]' 
+                                    className={`flex items-center py-3 rounded-2xl transition-all duration-200 font-medium ${
+                                        collapsed
+                                            ? 'justify-center px-0'
+                                            : 'gap-3.5 px-4'
+                                    } ${
+                                        active
+                                            ? 'glass-active-pill text-lime-400 font-bold shadow-[0_0_20px_rgba(163,230,53,0.25)]'
                                             : 'text-gray-300 hover:text-white hover:bg-white/10'
                                     }`}
+                                    title={collapsed ? item.name : undefined}
                                 >
                                     <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-lime-400' : 'text-gray-300'}`} />
-                                    <span className={`text-sm tracking-wide transition-all duration-300 ease-out overflow-hidden ${
-                                        collapsed ? 'lg:max-w-0 lg:opacity-0' : 'max-w-[10rem] opacity-100'
-                                    }`}>
-                                        {item.name}
-                                    </span>
+                                    {!collapsed && (
+                                        <span className="text-sm tracking-wide whitespace-nowrap overflow-hidden">
+                                            {item.name}
+                                        </span>
+                                    )}
                                 </Link>
                             );
                         })}
@@ -124,7 +194,7 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
                 </div>
 
                 {/* Bottom Navigation Items */}
-                <div className="space-y-2 pt-4 border-t border-white/10">
+                <div className="space-y-1 pt-4 border-t border-white/10">
                     {bottomNavItems.map((item) => {
                         const Icon = item.icon;
                         const active = isCurrentRoute(item.routeName);
@@ -134,18 +204,23 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
                                 href={item.routeName.startsWith('#') ? '#' : route(item.routeName)}
                                 prefetch
                                 onClick={() => setMobileOpen(false)}
-                                className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all duration-200 font-medium ${
-                                    active 
-                                        ? 'glass-active-pill text-lime-400 font-bold shadow-[0_0_20px_rgba(163,230,53,0.25)]' 
+                                className={`flex items-center py-3 rounded-2xl transition-all duration-200 font-medium ${
+                                    collapsed
+                                        ? 'justify-center px-0'
+                                        : 'gap-3.5 px-4'
+                                } ${
+                                    active
+                                        ? 'glass-active-pill text-lime-400 font-bold shadow-[0_0_20px_rgba(163,230,53,0.25)]'
                                         : 'text-gray-300 hover:text-white hover:bg-white/10'
                                 }`}
+                                title={collapsed ? item.name : undefined}
                             >
                                 <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-lime-400' : 'text-gray-300'}`} />
-                                <span className={`text-sm tracking-wide transition-all duration-300 ease-out overflow-hidden ${
-                                    collapsed ? 'lg:max-w-0 lg:opacity-0' : 'max-w-[10rem] opacity-100'
-                                }`}>
-                                    {item.name}
-                                </span>
+                                {!collapsed && (
+                                    <span className="text-sm tracking-wide whitespace-nowrap overflow-hidden">
+                                        {item.name}
+                                    </span>
+                                )}
                             </Link>
                         );
                     })}
