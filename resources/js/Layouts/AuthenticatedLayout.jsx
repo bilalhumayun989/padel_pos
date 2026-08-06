@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { 
-    LayoutGrid, 
-    Users, 
-    Trophy, 
-    Coffee, 
-    Package, 
-    Settings, 
-    Headphones, 
+import {
+    LayoutGrid,
+    Users,
+    Trophy,
+    Coffee,
+    Package,
+    Settings,
+    Headphones,
     PanelLeftClose,
     PanelLeftOpen,
     Bell,
@@ -16,7 +16,8 @@ import {
     User as UserIcon,
     Menu,
     X,
-    CalendarDays
+    CalendarDays,
+    History
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, facility = { name: 'SKYLINE PADDLE COURT', subtext: 'Main Court' } }) {
@@ -48,6 +49,7 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
         { name: 'Cafe',  routeName: 'cafe.index',  icon: Coffee },
         { name: 'Stock',    routeName: 'stock.index',    icon: Package    },
         { name: 'Schedule', routeName: 'schedule.index', icon: CalendarDays },
+        { name: 'History',  routeName: 'history.sales',  icon: History      },
     ];
 
     const bottomNavItems = [
@@ -57,6 +59,10 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
 
     const isCurrentRoute = (name) => {
         try {
+            // Highlight History nav for both history sub-routes
+            if (name === 'history.sales') {
+                return route().current('history.sales') || route().current('history.purchases') || route().current('history.expenses') || route().current('history.reconciliation');
+            }
             return route().current(name);
         } catch {
             return name === 'dashboard';
