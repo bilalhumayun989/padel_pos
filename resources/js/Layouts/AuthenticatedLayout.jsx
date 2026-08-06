@@ -17,7 +17,8 @@ import {
     Menu,
     X,
     CalendarDays,
-    History
+    History,
+    Truck
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, facility = { name: 'SKYLINE PADDLE COURT', subtext: 'Main Court' } }) {
@@ -50,6 +51,7 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
         { name: 'Stock',    routeName: 'stock.index',    icon: Package    },
         { name: 'Schedule', routeName: 'schedule.index', icon: CalendarDays },
         { name: 'History',  routeName: 'history.sales',  icon: History      },
+        { name: 'Suppliers', routeName: 'suppliers.index', icon: Truck },
     ];
 
     const bottomNavItems = [
