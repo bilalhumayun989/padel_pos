@@ -101,12 +101,12 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
 
             {/* Sidebar */}
             <aside 
-                className={`glass-sidebar fixed top-4 bottom-4 z-50 lg:z-40 flex flex-col justify-between transition-all duration-300 ease-out p-4 rounded-3xl overflow-hidden ${
+                className={`glass-sidebar fixed top-4 bottom-4 z-50 lg:z-40 flex flex-col transition-all duration-300 ease-out p-4 rounded-3xl ${
                     mobileOpen ? 'left-4 w-64' : '-left-80 lg:left-4'
                 } ${collapsed ? 'lg:w-20' : 'lg:w-64'}`}
             >
-                {/* Top Section */}
-                <div className="space-y-6">
+                {/* Top Section — scrollable */}
+                <div className="flex-1 overflow-y-auto overflow-x-hidden space-y-6 scrollbar-hide min-h-0">
 
                     {/* ── Logo / Brand ── */}
                     <div className="flex items-center justify-between px-1 py-1 min-h-[44px]">

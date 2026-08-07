@@ -117,6 +117,15 @@
   transform: translateY(-2px);
 }
 
+/* ─── Hide scrollbar but allow scroll ─────────────────────────── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* ─── Custom scrollbars ────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 6px;
