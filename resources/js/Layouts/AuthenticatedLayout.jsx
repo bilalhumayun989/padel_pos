@@ -21,7 +21,8 @@ import {
     Truck,
     LayoutList,
     Grid3x3,
-    Crown
+    Crown,
+    UsersRound
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, facility = { name: 'SKYLINE PADDLE COURT', subtext: 'Main Court' } }) {
@@ -47,17 +48,17 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
     };
 
     const navItems = [
-        { name: 'Dashboard', routeName: 'dashboard', icon: LayoutGrid },
-        { name: 'Clients', routeName: 'clients.index', icon: Users },
-        { name: 'Players', routeName: 'players.index', icon: Trophy },
-        { name: 'Cafe',  routeName: 'cafe.index',  icon: Coffee },
-        { name: 'Stock',    routeName: 'stock.index',    icon: Package    },
-        { name: 'Schedule', routeName: 'schedule.index', icon: CalendarDays },
-        { name: 'History',  routeName: 'history.sales',  icon: History      },
-        { name: 'Suppliers', routeName: 'suppliers.index', icon: Truck      },
-        { name: 'Products',  routeName: 'products.cafe',  icon: LayoutList },
-        { name: 'Courts',      routeName: 'courts.index',      icon: Grid3x3 },
-        { name: 'Memberships', routeName: 'memberships.index', icon: Crown   },
+        { name: 'Dashboard',   routeName: 'dashboard',          icon: LayoutGrid  },
+        { name: 'Players',     routeName: 'players.index',      icon: Trophy      },
+        { name: 'Teams',       routeName: 'teams.index',        icon: UsersRound  },
+        { name: 'Cafe',        routeName: 'cafe.index',         icon: Coffee      },
+        { name: 'Stock',       routeName: 'stock.index',        icon: Package     },
+        { name: 'Schedule',    routeName: 'schedule.index',     icon: CalendarDays},
+        { name: 'History',     routeName: 'history.sales',      icon: History     },
+        { name: 'Suppliers',   routeName: 'suppliers.index',    icon: Truck       },
+        { name: 'Products',    routeName: 'products.cafe',      icon: LayoutList  },
+        { name: 'Courts',      routeName: 'courts.index',       icon: Grid3x3     },
+        { name: 'Memberships', routeName: 'memberships.index',  icon: Crown       },
     ];
 
     const bottomNavItems = [
