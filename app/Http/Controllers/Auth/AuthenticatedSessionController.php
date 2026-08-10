@@ -27,14 +27,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Always remember for 30 days — re-login during the period resets the timer
-        Auth::logoutOtherDevices($request->password ?? '');
-
-        // Force remember cookie (43200 min = 30 days)
+        // Re-login with remember=true so the 30-day cookie is set
         Auth::guard('web')->login(Auth::user(), true);
-
-        // Extend session lifetime to 30 days for this session
-        $request->session()->put('_last_activity', now()->timestamp);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

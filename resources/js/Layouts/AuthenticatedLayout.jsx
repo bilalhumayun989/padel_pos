@@ -20,7 +20,8 @@ import {
     History,
     Truck,
     LayoutList,
-    Grid3x3
+    Grid3x3,
+    Crown
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, facility = { name: 'SKYLINE PADDLE COURT', subtext: 'Main Court' } }) {
@@ -55,7 +56,8 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
         { name: 'History',  routeName: 'history.sales',  icon: History      },
         { name: 'Suppliers', routeName: 'suppliers.index', icon: Truck      },
         { name: 'Products',  routeName: 'products.cafe',  icon: LayoutList },
-        { name: 'Courts',    routeName: 'courts.index',   icon: Grid3x3    },
+        { name: 'Courts',      routeName: 'courts.index',      icon: Grid3x3 },
+        { name: 'Memberships', routeName: 'memberships.index', icon: Crown   },
     ];
 
     const bottomNavItems = [
@@ -243,9 +245,9 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
             </aside>
 
             {/* Main Content Area */}
-            <div className={`flex-1 transition-all duration-300 relative z-10 w-full min-h-screen flex flex-col px-4 sm:px-6 lg:pr-6 py-4 max-w-[1920px] mx-auto ${
+            <div className={`flex-1 transition-all duration-300 w-full min-h-screen flex flex-col px-4 sm:px-6 lg:pr-6 py-4 max-w-[1920px] mx-auto ${
                 collapsed ? 'lg:ml-28' : 'lg:ml-72'
-            }`}>
+            }`} style={{ isolation: 'isolate' }}>
                 {/* Topbar Header */}
                 <header className="flex items-center justify-between lg:justify-end gap-3 py-2 mb-2">
                     {/* Mobile Hamburger Toggle */}

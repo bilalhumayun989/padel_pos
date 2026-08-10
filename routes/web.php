@@ -14,6 +14,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CourtController;
+use App\Http\Controllers\MembershipController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -35,6 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/products/cafe',    [ProductController::class, 'cafe'])->name('products.cafe');
     Route::get('/products/paddle',  [ProductController::class, 'paddle'])->name('products.paddle');
     Route::get('/courts',           [CourtController::class, 'index'])->name('courts.index');
+    Route::get('/memberships',      [MembershipController::class, 'index'])->name('memberships.index');
     Route::get('/history/sales',          [HistoryController::class, 'sales'])->name('history.sales');
     Route::get('/history/purchases',      [HistoryController::class, 'purchases'])->name('history.purchases');
     Route::get('/history/expenses',       [HistoryController::class, 'expenses'])->name('history.expenses');
