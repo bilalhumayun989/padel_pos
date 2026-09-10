@@ -4,7 +4,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import {
     DollarSign, Calendar, Coffee, Wallet, Trophy, Package,
     TrendingUp, ChevronRight, ShieldCheck, PauseCircle,
-    Plus, Sparkles, Activity, Clock
+    Plus, Sparkles, Activity, Clock, BarChart3, Users,
+    Crown, AlertTriangle, ArrowUpRight
 } from 'lucide-react';
 
 /* ─── GlassCard — blurred hero image bg, zero dark tint ────────── */
@@ -24,7 +25,7 @@ function GlassCard({ className = '', children }) {
     );
 }
 
-export default function Dashboard({ metrics, teams = [], recentBookings = [], facility }) {
+export default function Dashboard({ metrics, teams = [], recentBookings = [], analytics = {}, operations = {}, facility }) {
     const data = {
         revenue_today:      metrics?.revenue_today      ?? 0,
         revenue_trend:      metrics?.revenue_trend      ?? 0,
@@ -54,6 +55,16 @@ export default function Dashboard({ metrics, teams = [], recentBookings = [], fa
     const teamList = teams;
 
     const bookingsList = recentBookings;
+    const weeklyData = analytics.week ?? [];
+    const bookingStatuses = analytics.booking_statuses ?? [];
+    const courtPerformance = analytics.courts ?? [];
+    const maxWeeklyRevenue = Math.max(...weeklyData.map((day) => day.revenue + day.cafe), 1);
+    const maxCourtBookings = Math.max(...courtPerformance.map((court) => court.bookings), 1);
+    const chartPoints = weeklyData.map((day, index) => {
+        const x = weeklyData.length > 1 ? (index / (weeklyData.length - 1)) * 100 : 50;
+        const y = 92 - ((day.revenue + day.cafe) / maxWeeklyRevenue) * 76;
+        return `${x},${y}`;
+    }).join(' ');
 
     return (
         <AuthenticatedLayout facility={facility}>
@@ -215,6 +226,79 @@ export default function Dashboard({ metrics, teams = [], recentBookings = [], fa
                         </div>
                     </GlassCard>
                 </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                    <GlassCard className="lg:col-span-8 min-h-[320px]">
+                        <div className="p-4 sm:p-5 h-full">
+                            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <BarChart3 className="w-4 h-4 text-lime-400" />
+                                        <h3 className="text-sm font-bold text-white">Revenue & Booking Flow</h3>
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-1">Last 7 days across courts and cafe</p>
+                                </div>
+                                <div className="flex items-center gap-3 text-[10px] text-gray-300">
+                                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-lime-400" /> Revenue</span>
+                                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-sky-400" /> Bookings</span>
+                                </div>
+                            </div>
+                            <div className="relative h-[205px] pl-1">
+                                <div className="absolute inset-x-0 top-2 bottom-7 flex flex-col justify-between pointer-events-none">
+                                    {[100, 75, 50, 25, 0].map((value) => <div key={value} className="border-t border-white/[0.08]" />)}
+                                </div>
+                                <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-x-0 top-2 h-[170px] w-full overflow-visible">
+                                    <polyline points={chartPoints} fill="none" stroke="#a3e635" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
+                                    {weeklyData.map((day, index) => {
+                                        const x = weeklyData.length > 1 ? (index / (weeklyData.length - 1)) * 100 : 50;
+                                        const y = 92 - ((day.revenue + day.cafe) / maxWeeklyRevenue) * 76;
+                                        return <circle key={day.date} cx={x} cy={y} r="1.8" fill="#a3e635" stroke="#172115" strokeWidth="1" vectorEffect="non-scaling-stroke" />;
+                                    })}
+                                </svg>
+                                <div className="absolute inset-x-0 bottom-0 flex justify-between text-[10px] text-gray-500">
+                                    {weeklyData.map((day) => <span key={day.date}>{day.label}</span>)}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                                <div className="bg-white/[0.06] rounded-xl px-3 py-2"><p className="text-[10px] text-gray-400">7-day revenue</p><p className="text-sm font-bold text-lime-400">{formatCurrency(weeklyData.reduce((sum, day) => sum + day.revenue + day.cafe, 0))}</p></div>
+                                <div className="bg-white/[0.06] rounded-xl px-3 py-2"><p className="text-[10px] text-gray-400">Bookings</p><p className="text-sm font-bold text-white">{weeklyData.reduce((sum, day) => sum + day.bookings, 0)}</p></div>
+                                <div className="bg-white/[0.06] rounded-xl px-3 py-2"><p className="text-[10px] text-gray-400">Court revenue</p><p className="text-sm font-bold text-white">{formatCurrency(weeklyData.reduce((sum, day) => sum + day.revenue, 0))}</p></div>
+                                <div className="bg-white/[0.06] rounded-xl px-3 py-2"><p className="text-[10px] text-gray-400">Cafe revenue</p><p className="text-sm font-bold text-white">{formatCurrency(weeklyData.reduce((sum, day) => sum + day.cafe, 0))}</p></div>
+                            </div>
+                        </div>
+                    </GlassCard>
+
+                    <GlassCard className="lg:col-span-4 min-h-[320px]">
+                        <div className="p-4 sm:p-5 h-full flex flex-col">
+                            <div className="flex items-center gap-2 mb-1"><Activity className="w-4 h-4 text-sky-400" /><h3 className="text-sm font-bold text-white">Operations Snapshot</h3></div>
+                            <p className="text-xs text-gray-400 mb-4">Live records that need attention</p>
+                            <div className="grid grid-cols-2 gap-2.5 mb-5">
+                                <div className="bg-white/[0.06] border border-white/[0.08] rounded-2xl p-3"><Users className="w-4 h-4 text-sky-400 mb-2" /><p className="text-xl font-bold text-white">{operations.clients ?? 0}</p><p className="text-[10px] text-gray-400">Total clients</p></div>
+                                <div className="bg-white/[0.06] border border-white/[0.08] rounded-2xl p-3"><Crown className="w-4 h-4 text-lime-400 mb-2" /><p className="text-xl font-bold text-white">{operations.active_memberships ?? 0}</p><p className="text-[10px] text-gray-400">Active members</p></div>
+                                <div className="bg-white/[0.06] border border-white/[0.08] rounded-2xl p-3"><AlertTriangle className="w-4 h-4 text-amber-400 mb-2" /><p className="text-xl font-bold text-white">{operations.low_stock ?? 0}</p><p className="text-[10px] text-gray-400">Low stock items</p></div>
+                                <div className="bg-white/[0.06] border border-white/[0.08] rounded-2xl p-3"><ShieldCheck className="w-4 h-4 text-emerald-400 mb-2" /><p className="text-xl font-bold text-white">{operations.open_tickets ?? 0}</p><p className="text-[10px] text-gray-400">Open tickets</p></div>
+                            </div>
+                            <div className="mt-auto">
+                                <div className="flex items-center justify-between mb-2"><h4 className="text-xs font-semibold text-gray-200">Booking status mix</h4><span className="text-[10px] text-gray-500">All time</span></div>
+                                <div className="space-y-2">
+                                    {bookingStatuses.map((status) => {
+                                        const total = bookingStatuses.reduce((sum, item) => sum + item.value, 0) || 1;
+                                        return <div key={status.label} className="flex items-center gap-2"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: status.color }} /><span className="text-[11px] text-gray-400 w-16">{status.label}</span><div className="h-1.5 flex-1 bg-white/10 rounded-full overflow-hidden"><div className="h-full rounded-full" style={{ width: `${(status.value / total) * 100}%`, backgroundColor: status.color }} /></div><span className="text-[11px] text-white font-semibold w-6 text-right">{status.value}</span></div>;
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    </GlassCard>
+                </div>
+
+                <GlassCard className="min-h-[220px]">
+                    <div className="p-4 sm:p-5">
+                        <div className="flex items-center justify-between mb-4"><div><div className="flex items-center gap-2"><Trophy className="w-4 h-4 text-lime-400" /><h3 className="text-sm font-bold text-white">Court Performance</h3></div><p className="text-xs text-gray-400 mt-1">Bookings and completed revenue over the last 7 days</p></div><span className="text-[10px] uppercase tracking-wider text-gray-500">{courtPerformance.length} courts</span></div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {courtPerformance.map((court, index) => <div key={court.name} className="bg-white/[0.06] border border-white/[0.08] rounded-2xl p-3.5 hover:border-lime-400/30 transition-colors"><div className="flex items-start justify-between gap-2"><div><p className="text-sm font-bold text-white">{court.name}</p><p className="text-[10px] text-gray-400 mt-0.5">{court.status}</p></div><span className="text-[10px] font-bold text-lime-400">#{index + 1}</span></div><div className="mt-4 flex items-end justify-between"><div><p className="text-lg font-bold text-white">{court.bookings}</p><p className="text-[10px] text-gray-500">bookings</p></div><div className="text-right"><p className="text-sm font-bold text-lime-400">{formatCurrency(court.revenue)}</p><p className="text-[10px] text-gray-500">completed revenue</p></div></div><div className="h-1.5 mt-3 bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-lime-400 rounded-full" style={{ width: `${(court.bookings / maxCourtBookings) * 100}%` }} /></div></div>)}
+                        </div>
+                    </div>
+                </GlassCard>
             </div>
         </AuthenticatedLayout>
     );

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 namespace Tests\Feature;
 
 use App\Models\{Booking, CafeOrder, CafeOrderItem, Client, Court, Membership, MembershipPlan, Player, Purchase, StockItem, Supplier, Team, User};

@@ -25,8 +25,8 @@ class DatabaseSeederTest extends TestCase
         $this->seed();
         $models = [User::class, Court::class, Client::class, Team::class, Player::class, Booking::class, CafeOrder::class, Expense::class, StockItem::class];
         $counts = array_map(fn ($model) => $model::count(), $models);
-        $admin = User::where('email', 'admin@skylinepadel.com')->firstOrFail();
-        $this->assertTrue(Hash::check('password', $admin->password));
+        $admin = User::where('email', 'admin@gmail.com')->firstOrFail();
+        $this->assertTrue(Hash::check('12345678', $admin->password));
         $admin->update(['password' => 'changed-password']);
         $this->seed();
         $this->assertSame($counts, array_map(fn ($model) => $model::count(), $models));

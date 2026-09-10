@@ -6,8 +6,12 @@ use App\Models\Booking;
 use App\Models\CafeOrder;
 use App\Models\CafeOrderItem;
 use App\Models\ClubSetting;
+use App\Models\Membership;
 use App\Models\MembershipPlan;
+use App\Models\Purchase;
+use App\Models\Reconciliation;
 use App\Models\Supplier;
+use App\Models\SupportTicket;
 use App\Models\Client;
 use App\Models\Court;
 use App\Models\Expense;
@@ -38,11 +42,24 @@ class DatabaseSeeder extends Seeder
             foreach ([['Basic', 30, 'gray'], ['Pro', 60, 'lime'], ['Elite', 100, 'white']] as [$name, $price, $color]) {
                 MembershipPlan::firstOrCreate(['name' => $name], ['price' => $price, 'duration' => 30, 'color' => $color, 'status' => 'Active', 'perks' => ['Club membership']]);
             }
-            User::firstOrCreate(['email' => 'admin@skylinepadel.com'], [
-                'name' => 'Skyline Padel Admin',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-            ]);
+            $admin = User::where('email', 'admin@gmail.com')->first();
+            if (! $admin) {
+                $admin = User::where('email', 'admin@skylinepadel.com')->first();
+                if ($admin) {
+                    $admin->forceFill([
+                        'email' => 'admin@gmail.com',
+                        'password' => Hash::make('12345678'),
+                    ])->save();
+                } else {
+                    $admin = User::create([
+                        'name' => 'Skyline Padel Admin',
+                        'email' => 'admin@gmail.com',
+                        'password' => Hash::make('12345678'),
+                        'email_verified_at' => now(),
+                    ]);
+                }
+            }
+            $plans = MembershipPlan::whereIn('name', ['Basic', 'Pro', 'Elite'])->get()->keyBy('name');
 
             $courts = collect([
                 ['Main Court 1', 'indoor', 60],
@@ -63,6 +80,22 @@ class DatabaseSeeder extends Seeder
                 'name' => $name, 'phone' => '+1555010'.sprintf('%04d', $i + 1),
                 'status' => 'active', 'last_visit' => Carbon::today()->subDays($i % 7),
             ]));
+
+            foreach ($clients->take(6) as $index => $client) {
+                $plan = $plans->get(['Basic', 'Pro', 'Elite'][$index % 3]);
+                $startsAt = Carbon::today()->subDays($index * 4);
+                if (! Membership::where('client_id', $client->id)
+                    ->where('membership_plan_id', $plan->id)
+                    ->whereDate('starts_at', $startsAt)
+                    ->exists()) {
+                    Membership::create([
+                        'client_id' => $client->id, 'membership_plan_id' => $plan->id,
+                        'starts_at' => $startsAt->toDateString(),
+                        'ends_at' => $startsAt->copy()->addDays($plan->duration)->toDateString(),
+                        'amount' => $plan->price,
+                    ]);
+                }
+            }
 
             foreach (['Team Alpha' => '#22c55e', 'Team Smashers' => '#3b82f6'] as $name => $color) {
                 $team = Team::firstOrCreate(['name' => $name], [
@@ -130,6 +163,49 @@ class DatabaseSeeder extends Seeder
                     'status' => $quantity === 0 ? 'out_of_stock' : ($quantity < $minimum ? 'low_stock' : 'in_stock'),
                 ]);
             }
+
+            $equipmentSupplier = Supplier::where('name', 'Local Equipment Supplier')->firstOrFail();
+            $cafeSupplier = Supplier::where('name', 'Local Cafe Supplier')->firstOrFail();
+            foreach ([
+                [$equipmentSupplier, 'Padel Balls (Babolat)', 24, 10, 240, 240],
+                [$equipmentSupplier, 'Grip Tapes', 20, 5, 100, 50],
+                [$cafeSupplier, 'Bottled Water', 48, 1.5, 72, 72],
+            ] as [$supplier, $itemName, $quantity, $unitPrice, $total, $paid]) {
+                $item = StockItem::where('name', $itemName)->firstOrFail();
+                $purchaseDate = Carbon::today()->subDays(3);
+                if (! Purchase::where('supplier_id', $supplier->id)
+                    ->where('stock_item_id', $item->id)
+                    ->where('quantity', $quantity)
+                    ->whereDate('purchase_date', $purchaseDate)
+                    ->exists()) {
+                    Purchase::create([
+                        'supplier_id' => $supplier->id, 'stock_item_id' => $item->id,
+                        'quantity' => $quantity, 'unit_price' => $unitPrice,
+                        'total_amount' => $total, 'paid_amount' => $paid,
+                        'purchase_date' => $purchaseDate->toDateString(),
+                    ]);
+                }
+            }
+
+            $reconciliationDate = Carbon::today()->subDay()->toDateString();
+            $expected = Booking::whereDate('booking_date', $reconciliationDate)->where('status', 'completed')->sum('total_amount')
+                + CafeOrder::whereDate('order_date', $reconciliationDate)->where('status', 'completed')->sum('total_amount')
+                - Expense::whereDate('expense_date', $reconciliationDate)->sum('amount')
+                - Purchase::whereDate('purchase_date', $reconciliationDate)->sum('paid_amount');
+            if (! Reconciliation::whereDate('date', $reconciliationDate)->exists()) {
+                Reconciliation::create([
+                    'user_id' => $admin->id, 'date' => $reconciliationDate,
+                    'expected' => $expected, 'actual' => $expected,
+                ]);
+            }
+            SupportTicket::firstOrCreate([
+                'user_id' => $admin->id,
+                'subject' => 'Welcome to Skyline Padel POS',
+            ], [
+                'category' => 'General',
+                'message' => 'Demo support ticket for the local installation.',
+                'status' => 'open',
+            ]);
 
             // Itemized demo receipts use the same products as the live checkout.
             $demoOrders = CafeOrder::where('items_summary', '1x Protein Shake, 1x Water')
