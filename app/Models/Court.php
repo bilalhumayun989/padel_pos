@@ -22,6 +22,7 @@ class Court extends Model
         'type',
         'hourly_rate',
         'status',
+        'is_demo',
     ];
 
     protected $casts = [

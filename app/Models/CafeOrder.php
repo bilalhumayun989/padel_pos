@@ -16,6 +16,7 @@ class CafeOrder extends Model
         'order_date',
         'status',
         'items_summary',
+        'is_demo',
     ];
 
     protected $casts = [

@@ -17,6 +17,11 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    public function isDemo(): bool
+    {
+        return $this->email === 'demo@skylinepadel.com';
+    }
+
     /**
      * Get the attributes that should be cast.
      *

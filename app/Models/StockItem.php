@@ -22,6 +22,7 @@ class StockItem extends Model
         'unit_price',
         'unit',
         'status',
+        'is_demo',
     ];
 
     public function supplier() { return $this->belongsTo(Supplier::class); }

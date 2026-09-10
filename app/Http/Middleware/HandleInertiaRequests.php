@@ -36,6 +36,10 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'demo' => fn () => [
+                'active' => (bool) $request->user()?->isDemo(),
+                'limit' => \App\Http\Middleware\LimitDemoActions::LIMIT,
+            ],
         ];
     }
 }

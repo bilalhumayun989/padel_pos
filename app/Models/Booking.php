@@ -23,6 +23,7 @@ class Booking extends Model
         'status',
         'total_amount',
         'notes',
+        'is_demo',
     ];
 
     protected $casts = [

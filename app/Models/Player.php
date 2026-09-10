@@ -17,6 +17,7 @@ class Player extends Model
         'status',
         'avatar',
         'skill_level',
+        'is_demo',
     ];
 
     public function team(): BelongsTo

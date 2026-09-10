@@ -20,6 +20,7 @@ class Team extends Model
         'max_players',
         'color',
         'status',
+        'is_demo',
     ];
 
     public function players(): HasMany

@@ -17,6 +17,7 @@ class Client extends Model
         'status',
         'last_visit',
         'avatar',
+        'is_demo',
     ];
 
     protected $casts = [

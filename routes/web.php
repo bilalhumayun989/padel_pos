@@ -17,6 +17,7 @@ use App\Http\Controllers\CourtController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\DemoController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -25,7 +26,9 @@ Route::get('/', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::get('/demo', [DemoController::class, 'enter'])->name('demo.enter');
+
+Route::middleware(['auth', 'demo.limit'])->group(function () {
     Route::patch('/bookings/{booking}', [BookingController::class, 'update'])->name('bookings.update');
     Route::post('/courts', [CourtController::class, 'store'])->name('courts.store');
     Route::put('/courts/{court}', [CourtController::class, 'update'])->name('courts.update');

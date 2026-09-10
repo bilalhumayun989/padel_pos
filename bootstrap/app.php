@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ExtendSession::class,
         ]);
 
+        $middleware->alias([
+            'demo.limit' => \App\Http\Middleware\LimitDemoActions::class,
+        ]);
+
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {

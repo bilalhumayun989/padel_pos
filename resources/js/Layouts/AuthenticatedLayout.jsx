@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, facility = { name: 'SKYLINE PADDLE COURT', subtext: 'Main Court' } }) {
-    const { auth, errors = {}, flash = {} } = usePage().props;
+    const { auth, errors = {}, flash = {}, demo = {} } = usePage().props;
     const user = auth?.user || { name: 'Admin', email: 'admin@skylinepadel.com' };
     // Persist collapsed state across page navigations
     const [collapsed, setCollapsed] = useState(() => {
@@ -267,6 +267,15 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
                     </button>
 
                     <div className="flex items-center gap-3">
+                        {demo.active && (
+                            <div className="hidden sm:flex items-center gap-2 rounded-2xl border border-amber-300/35 bg-amber-300/15 px-3.5 py-2 text-amber-100 shadow-[0_0_18px_rgba(251,191,36,0.12)]" role="status">
+                                <span className="h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.8)]" />
+                                <div>
+                                    <p className="text-[10px] font-extrabold uppercase tracking-[0.16em]">Demo Mode</p>
+                                    <p className="text-[10px] text-amber-100/70">Maximum {demo.limit} per resource</p>
+                                </div>
+                            </div>
+                        )}
                         {/* Facility Pill */}
                         <div className="glass-panel px-3.5 sm:px-4 py-2 flex items-center gap-2.5 sm:gap-3 rounded-2xl">
                             <div className="w-8 h-8 rounded-full bg-lime-400/20 flex items-center justify-center border border-lime-400/40 shadow-[0_0_12px_rgba(163,230,53,0.35)]">
@@ -328,7 +337,7 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
                 {/* Page Content */}
                 <main className="flex-1 flex flex-col">
                     {flash.success && <div role="status" className="p-3 mb-3 bg-lime-900 text-lime-100 rounded-xl">{flash.success}</div>}
-                    {Object.keys(errors).length > 0 && <div role="alert" className="fixed top-4 right-4 z-[100] max-w-md p-4 bg-red-950 text-red-100 rounded-xl">{Object.values(errors).map((error,i) => <p key={i}>{error}</p>)}</div>}
+                    {Object.keys(errors).length > 0 && <div role="alert" className={`fixed top-4 right-4 z-[100] max-w-md rounded-xl border p-4 shadow-2xl ${errors.demo ? 'border-amber-300/40 bg-amber-950 text-amber-100' : 'border-red-400/30 bg-red-950 text-red-100'}`}>{Object.values(errors).map((error,i) => <p key={i}>{error}</p>)}</div>}
                     {children}</main>
             </div>
         </div>

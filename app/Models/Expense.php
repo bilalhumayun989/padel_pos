@@ -15,6 +15,7 @@ class Expense extends Model
         'category',
         'expense_date',
         'reference',
+        'is_demo',
     ];
 
     protected $casts = [
