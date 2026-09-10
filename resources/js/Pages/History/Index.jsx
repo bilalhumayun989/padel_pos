@@ -1,3 +1,4 @@
+import RecordForm from '@/Components/RecordForm';
 import React, { useState, useMemo } from 'react';
 import { Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -59,17 +60,17 @@ const TAB_STYLES = {
     inactive: 'bg-transparent text-gray-400 border-0 hover:text-gray-200',
 };
 
-export default function HistoryIndex({ tab = 'sales', transactions = [], expenses = [], reconciliation = [], metrics = {}, facility }) {
+export default function HistoryIndex({ suppliers = [], stockItems = [], tab = 'sales', transactions = [], expenses = [], reconciliation = [], metrics = {}, facility }) {
     const [search, setSearch]       = useState('');
     const [catFilter, setCatFilter] = useState('All');
 
     const m = {
-        total_events:  metrics.total_events  ?? 12,
-        events_trend:  metrics.events_trend  ?? 6,
-        refunds:       metrics.refunds       ?? 1,
-        refunds_total: metrics.refunds_total ?? 12,
-        refunds_trend: metrics.refunds_trend ?? -9,
-        cancellations: metrics.cancellations ?? 1,
+        total_events:  metrics.total_events  ?? 0,
+        events_trend:  metrics.events_trend  ?? 0,
+        refunds:       metrics.refunds       ?? 0,
+        refunds_total: metrics.refunds_total ?? 0,
+        refunds_trend: metrics.refunds_trend ?? 0,
+        cancellations: metrics.cancellations ?? 0,
         cancel_trend:  metrics.cancel_trend  ?? 0,
     };
 
@@ -111,6 +112,14 @@ export default function HistoryIndex({ tab = 'sales', transactions = [], expense
 
     return (
         <AuthenticatedLayout facility={facility}>
+            <div className="flex flex-wrap gap-3 mb-4">{tab === 'expenses' && <RecordForm label="Record Expense" endpoint={route('expenses.store')} fields={[
+ {name:'description',label:'Description',required:true},{name:'category',label:'Category',required:true},{name:'amount',label:'Amount',type:'number',required:true},{name:'expense_date',label:'Date',type:'date',required:true},{name:'reference',label:'Reference'}]} />}
+ {tab === 'purchases' && <RecordForm label="Receive Purchase" endpoint={route('purchases.store')} fields={[
+ {name:'supplier_id',label:'Supplier',required:true,options:suppliers.map(s=>({value:s.id,label:s.name}))},
+ {name:'stock_item_id',label:'Product',required:true,options:stockItems.map(s=>({value:s.id,label:s.name}))},
+ {name:'quantity',label:'Quantity',type:'number',required:true},{name:'unit_price',label:'Unit Cost',type:'number',required:true},{name:'paid_amount',label:'Amount Paid',type:'number',value:0},{name:'purchase_date',label:'Date',type:'date',required:true}]} />}
+ {tab === 'reconciliation' && <RecordForm label="Reconcile Day" endpoint={route('reconciliation.store')} fields={[
+ {name:'date',label:'Date',type:'date',required:true},{name:'actual',label:'Actual closing amount',type:'number',required:true}]} />}</div>
             <Head title="Padel POS – History" />
 
             <div className="flex flex-col flex-1 w-full gap-4">

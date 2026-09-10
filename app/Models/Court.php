@@ -11,6 +11,13 @@ class Court extends Model
     use HasFactory;
 
     protected $fillable = [
+        'location',
+        'capacity',
+        'surface',
+        'lights',
+        'description',
+        'image',
+
         'name',
         'type',
         'hourly_rate',

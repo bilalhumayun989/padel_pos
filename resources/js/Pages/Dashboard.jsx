@@ -26,18 +26,18 @@ function GlassCard({ className = '', children }) {
 
 export default function Dashboard({ metrics, teams = [], recentBookings = [], facility }) {
     const data = {
-        revenue_today:      metrics?.revenue_today      ?? 1560,
-        revenue_trend:      metrics?.revenue_trend      ?? 12,
-        today_bookings:     metrics?.today_bookings     ?? 36,
-        bookings_trend:     metrics?.bookings_trend     ?? 9,
-        cafe_revenue:       metrics?.cafe_revenue       ?? 120,
-        cafe_trend:         metrics?.cafe_trend         ?? 6,
-        expenses:           metrics?.expenses           ?? 43,
-        expenses_trend:     metrics?.expenses_trend     ?? 6,
-        players_percentage: metrics?.players_percentage ?? 84,
-        players_trend:      metrics?.players_trend      ?? 6,
-        stock_percentage:   metrics?.stock_percentage   ?? 84,
-        stock_trend:        metrics?.stock_trend        ?? 6,
+        revenue_today:      metrics?.revenue_today      ?? 0,
+        revenue_trend:      metrics?.revenue_trend      ?? 0,
+        today_bookings:     metrics?.today_bookings     ?? 0,
+        bookings_trend:     metrics?.bookings_trend     ?? 0,
+        cafe_revenue:       metrics?.cafe_revenue       ?? 0,
+        cafe_trend:         metrics?.cafe_trend         ?? 0,
+        expenses:           metrics?.expenses           ?? 0,
+        expenses_trend:     metrics?.expenses_trend     ?? 0,
+        players_percentage: metrics?.players_percentage ?? 0,
+        players_trend:      metrics?.players_trend      ?? 0,
+        stock_percentage:   metrics?.stock_percentage   ?? 0,
+        stock_trend:        metrics?.stock_trend        ?? 0,
     };
 
     const formatCurrency = (v) => `PKR ${Math.round(v).toLocaleString()}`;
@@ -51,17 +51,9 @@ export default function Dashboard({ metrics, teams = [], recentBookings = [], fa
         { title: 'Stock',          value: `${data.stock_percentage}%`,         trend: `${data.stock_trend}% vs Yesterday`,    icon: Package    },
     ];
 
-    const teamList = teams.length > 0 ? teams : [
-        { id: 1, name: 'Team Alpha',    players_count: 12, ready_ratio: '4/4', active: true  },
-        { id: 2, name: 'Team Smashers', players_count: 12, ready_ratio: '4/4', active: false },
-    ];
+    const teamList = teams;
 
-    const bookingsList = recentBookings.length > 0 ? recentBookings : [
-        { id: 1, name: 'Umar Iqbal',  status: 'Active', last_visit: 'Today'      },
-        { id: 2, name: 'Saad khalid', status: 'Active', last_visit: 'Yesterday'  },
-        { id: 3, name: 'Zohaib',      status: 'Paused', last_visit: '3 Days Ago' },
-        { id: 4, name: 'Fahad',       status: 'Active', last_visit: 'Today'      },
-    ];
+    const bookingsList = recentBookings;
 
     return (
         <AuthenticatedLayout facility={facility}>

@@ -23,6 +23,8 @@ class Client extends Model
         'last_visit' => 'date',
     ];
 
+    public function memberships() { return $this->hasMany(Membership::class); }
+
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);

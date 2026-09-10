@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import {
     Search, Plus, Users, UserCheck, ShoppingCart,
     DollarSign, Phone, Mail, MapPin, Eye, ShoppingBag,
@@ -56,18 +56,18 @@ export default function SuppliersIndex({ suppliers = [], metrics = {}, facility 
     const [form, setForm] = useState({ name:'', category:'', contact:'', phone:'', email:'', location:'' });
 
     const m = {
-        total_suppliers:  metrics.total_suppliers  ?? 6,
-        active_suppliers: metrics.active_suppliers ?? 5,
-        total_orders:     metrics.total_orders     ?? 107,
-        pending_balance:  metrics.pending_balance  ?? 59550,
+        total_suppliers:  metrics.total_suppliers  ?? 0,
+        active_suppliers: metrics.active_suppliers ?? 0,
+        total_orders:     metrics.total_orders     ?? 0,
+        pending_balance:  metrics.pending_balance  ?? 0,
     };
 
     const filtered = suppliers.filter(s =>
-        [s.name, s.category, s.location].some(v => v.toLowerCase().includes(search.toLowerCase()))
+        [s.name, s.category, s.location].some(v => (v ?? '').toLowerCase().includes(search.toLowerCase()))
     );
 
     const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
-    const handleSave   = () => { setShowModal(false); setForm({ name:'', category:'', contact:'', phone:'', email:'', location:'' }); };
+    const handleSave = () => router.post(route('suppliers.store'), form, { onSuccess: () => { setShowModal(false); setForm({ name:'', category:'', contact:'', phone:'', email:'', location:'' }); } });
 
     const stats = [
         { label:'Total Suppliers', value: m.total_suppliers,                          icon: Truck,        ring:'ring-lime-400/30', text:'text-lime-400'  },

@@ -1,73 +1,29 @@
 <?php
-
 namespace App\Http\Controllers;
-
+use App\Models\{Booking, CafeOrder, CafeOrderItem, Client, Court, Expense, Player, StockItem, Team, Supplier, Membership, MembershipPlan, Purchase, Reconciliation, ClubSetting, SupportTicket};
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
+class ProductController extends Controller {
 
-class ProductController extends Controller
-{
-    public function index()
-    {
-        return redirect()->route('products.cafe');
-    }
+public function index() { return redirect()->route('products.cafe'); }
+public function cafe() { return $this->listing('cafe'); }
+public function paddle() { return $this->listing('paddle'); }
+private function listing($tab) {
+ $q=StockItem::with('supplier'); $categories=['cafe','Cafe','Bundles','Drinks','Snacks']; $tab==='cafe'?$q->whereIn('category',$categories):$q->whereNotIn('category',$categories); $products=$q->get();
+ return Inertia::render('Products/Index',['tab'=>$tab,'products'=>$products->map(fn($p)=>['id'=>$p->id,'name'=>$p->name,'category'=>ucfirst($p->category),'price'=>(float)$p->unit_price,'cost'=>(float)$p->cost,'stock'=>$p->quantity,'unit'=>$p->unit,'supplier'=>$p->supplier?->name??'','supplier_id'=>$p->supplier_id,'image'=>$p->image,'status'=>$p->active?'Active':'Inactive']), 'suppliers'=>Supplier::all(['id','name']), 'metrics'=>['total'=>$products->count(),'active'=>$products->where('active',true)->count(),'low_stock'=>$products->filter(fn($p)=>$p->quantity<$p->min_quantity)->count(),'categories'=>$products->pluck('category')->unique()->count()]]);
+}
+public function store(Request $r) { return $this->save($r,new StockItem); }
+public function update(Request $r,StockItem $product) { return $this->save($r,$product); }
+private function save(Request $r,StockItem $product) {
+ $d=$r->validate(['name'=>'required|string|max:255','category'=>'required|string|max:80','price'=>'required|numeric|min:0|max:99999999','cost'=>'required|numeric|min:0|max:99999999','stock'=>'required|integer|min:0','unit'=>'required|string|max:30','supplier'=>'nullable|string|max:255','image'=>'nullable|url|max:2000','status'=>'required|in:Active,Inactive']);
+ $supplier=!empty($d['supplier'])?Supplier::where('name',$d['supplier'])->first():null;
+ if(!empty($d['supplier'])&&!$supplier) throw ValidationException::withMessages(['supplier'=>'Select an existing supplier.']);
+ $product->fill(['name'=>$d['name'],'category'=>$d['category'],'unit_price'=>$d['price'],'cost'=>$d['cost'],'quantity'=>$d['stock'],'unit'=>$d['unit'],'supplier_id'=>$supplier?->id,'image'=>$d['image']??null,'active'=>$d['status']==='Active']);
+ $product->status=$product->quantity===0?'out_of_stock':($product->quantity<($product->min_quantity??5)?'low_stock':'in_stock'); $product->save(); return back()->with('success','Product saved.');
+}
+public function destroy(StockItem $product) { $product->update(['active'=>false]); return back()->with('success','Product archived.'); }
 
-    public function cafe()
-    {
-        return Inertia::render('Products/Index', [
-            'tab'       => 'cafe',
-            'products'  => $this->cafeProducts(),
-            'suppliers' => $this->supplierList(),
-            'metrics'   => ['total' => 10, 'active' => 9, 'low_stock' => 1, 'categories' => 3],
-        ]);
-    }
-
-    public function paddle()
-    {
-        return Inertia::render('Products/Index', [
-            'tab'       => 'paddle',
-            'products'  => $this->paddleProducts(),
-            'suppliers' => $this->supplierList(),
-            'metrics'   => ['total' => 6, 'active' => 6, 'low_stock' => 0, 'categories' => 2],
-        ]);
-    }
-
-    private function supplierList(): array
-    {
-        return [
-            ['id' => 1, 'name' => 'Babolat Sports'],
-            ['id' => 2, 'name' => 'Wilson Pakistan'],
-            ['id' => 3, 'name' => 'Head International'],
-            ['id' => 4, 'name' => 'Adidas Padel'],
-            ['id' => 5, 'name' => 'Nox International'],
-            ['id' => 6, 'name' => 'Bullpadel Supplies'],
-        ];
-    }
-
-    private function cafeProducts(): array
-    {
-        return [
-            ['id'=>1, 'name'=>'Cold Brew Coffee',  'category'=>'Drinks',  'price'=>4.50, 'cost'=>2.00, 'stock'=>45, 'unit'=>'cup',    'supplier'=>null,                  'image'=>'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>2, 'name'=>'Espresso Shot',      'category'=>'Drinks',  'price'=>3.00, 'cost'=>1.20, 'stock'=>60, 'unit'=>'cup',    'supplier'=>null,                  'image'=>'https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>3, 'name'=>'Cappuccino',          'category'=>'Drinks',  'price'=>4.00, 'cost'=>1.80, 'stock'=>50, 'unit'=>'cup',    'supplier'=>null,                  'image'=>'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>4, 'name'=>'Matcha Latte',        'category'=>'Drinks',  'price'=>5.00, 'cost'=>2.20, 'stock'=>35, 'unit'=>'cup',    'supplier'=>null,                  'image'=>'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>5, 'name'=>'Americano',           'category'=>'Drinks',  'price'=>3.50, 'cost'=>1.30, 'stock'=>55, 'unit'=>'cup',    'supplier'=>null,                  'image'=>'https://images.unsplash.com/photo-1497515114629-f71d768fd07c?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>6, 'name'=>'Iced Latte',          'category'=>'Drinks',  'price'=>4.50, 'cost'=>1.90, 'stock'=> 8, 'unit'=>'cup',    'supplier'=>null,                  'image'=>'https://images.unsplash.com/photo-1517959105821-eaf2591984d2?auto=format&fit=crop&w=400&q=80', 'status'=>'Low Stock'],
-            ['id'=>7, 'name'=>'Chocolate Croissant', 'category'=>'Snacks',  'price'=>3.50, 'cost'=>1.50, 'stock'=>20, 'unit'=>'piece',  'supplier'=>null,                  'image'=>'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>8, 'name'=>'Protein Bar',         'category'=>'Snacks',  'price'=>4.00, 'cost'=>2.00, 'stock'=>30, 'unit'=>'piece',  'supplier'=>null,                  'image'=>'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>9, 'name'=>'Energy Bundle',       'category'=>'Bundles', 'price'=>18.00,'cost'=>9.00, 'stock'=>20, 'unit'=>'bundle', 'supplier'=>'Bullpadel Supplies',  'image'=>'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>10,'name'=>'Water Bottle (500ml)','category'=>'Drinks',  'price'=>1.50, 'cost'=>0.50, 'stock'=>100,'unit'=>'bottle', 'supplier'=>null,                  'image'=>'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-        ];
-    }
-
-    private function paddleProducts(): array
-    {
-        return [
-            ['id'=>20,'name'=>'Babolat Padel Balls (3pk)', 'category'=>'Balls',   'price'=>12.00, 'cost'=>6.50, 'stock'=>30, 'unit'=>'pack', 'supplier'=>'Babolat Sports',    'image'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>21,'name'=>'Wilson Padel Balls (3pk)',  'category'=>'Balls',   'price'=>11.00, 'cost'=>5.50, 'stock'=>25, 'unit'=>'pack', 'supplier'=>'Wilson Pakistan',   'image'=>'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>22,'name'=>'Nox AT10 Racket',           'category'=>'Rackets', 'price'=>180.00,'cost'=>90.00,'stock'=> 6, 'unit'=>'piece','supplier'=>'Nox International', 'image'=>'https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>23,'name'=>'Bullpadel Vertex Racket',   'category'=>'Rackets', 'price'=>220.00,'cost'=>110.00,'stock'=>4, 'unit'=>'piece','supplier'=>'Bullpadel Supplies','image'=>'https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>24,'name'=>'Head Alpha Pro Racket',     'category'=>'Rackets', 'price'=>195.00,'cost'=>95.00,'stock'=> 5, 'unit'=>'piece','supplier'=>'Head International','image'=>'https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-            ['id'=>25,'name'=>'Wilson Blade Racket',       'category'=>'Rackets', 'price'=>165.00,'cost'=>80.00,'stock'=> 8, 'unit'=>'piece','supplier'=>'Wilson Pakistan',   'image'=>'https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=400&q=80', 'status'=>'Active'],
-        ];
-    }
 }

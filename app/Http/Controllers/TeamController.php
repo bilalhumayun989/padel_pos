@@ -1,98 +1,31 @@
 <?php
-
 namespace App\Http\Controllers;
-
+use App\Models\{Booking, CafeOrder, CafeOrderItem, Client, Court, Expense, Player, StockItem, Team, Supplier, Membership, MembershipPlan, Purchase, Reconciliation, ClubSetting, SupportTicket};
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
+class TeamController extends Controller {
 
-class TeamController extends Controller
-{
-    public function index()
-    {
-        return Inertia::render('Teams/Index', [
-            'teams' => [
-                [
-                    'id'           => 1,
-                    'name'         => 'Team Alpha',
-                    'captain'      => 'Umar Iqbal',
-                    'members'      => ['Umar Iqbal', 'Saad Khalid', 'Zohaib Ahmed', 'Fahad Khan'],
-                    'skill_level'  => 'Advanced',
-                    'court'        => 'Court 1',
-                    'court_booked' => true,
-                    'booking_date' => '2024-10-24',
-                    'booking_time' => '6:00 PM',
-                    'payment'      => 'Paid',
-                    'payment_amount' => 100,
-                    'wins'         => 12,
-                    'losses'       => 3,
-                    'matches'      => 15,
-                    'status'       => 'Active',
-                    'created_at'   => '2024-01-15',
-                    'image'        => 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=800&q=80',
-                ],
-                [
-                    'id'           => 2,
-                    'name'         => 'Team Smashers',
-                    'captain'      => 'Ali Hassan',
-                    'members'      => ['Ali Hassan', 'Bilal Mirza', 'Nadia Shah', 'Omar Tariq'],
-                    'skill_level'  => 'Intermediate',
-                    'court'        => 'Court 2',
-                    'court_booked' => true,
-                    'booking_date' => '2024-10-25',
-                    'booking_time' => '4:00 PM',
-                    'payment'      => 'Unpaid',
-                    'payment_amount' => 80,
-                    'wins'         => 8,
-                    'losses'       => 5,
-                    'matches'      => 13,
-                    'status'       => 'Active',
-                    'created_at'   => '2024-02-20',
-                    'image'        => 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=800&q=80',
-                ],
-                [
-                    'id'           => 3,
-                    'name'         => 'Thunder Rackets',
-                    'captain'      => 'Hina Rauf',
-                    'members'      => ['Hina Rauf', 'Sara Ahmed'],
-                    'skill_level'  => 'Beginner',
-                    'court'        => null,
-                    'court_booked' => false,
-                    'booking_date' => null,
-                    'booking_time' => null,
-                    'payment'      => 'N/A',
-                    'payment_amount' => 0,
-                    'wins'         => 2,
-                    'losses'       => 6,
-                    'matches'      => 8,
-                    'status'       => 'Active',
-                    'created_at'   => '2024-03-10',
-                    'image'        => 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=800&q=80',
-                ],
-                [
-                    'id'           => 4,
-                    'name'         => 'Pro Padelers',
-                    'captain'      => 'Kamran Butt',
-                    'members'      => ['Kamran Butt', 'Ayesha Siddiq', 'Zain Ul', 'Fatima Noor'],
-                    'skill_level'  => 'Pro',
-                    'court'        => 'Court 3',
-                    'court_booked' => true,
-                    'booking_date' => '2024-10-26',
-                    'booking_time' => '8:00 PM',
-                    'payment'      => 'Paid',
-                    'payment_amount' => 140,
-                    'wins'         => 20,
-                    'losses'       => 2,
-                    'matches'      => 22,
-                    'status'       => 'Active',
-                    'created_at'   => '2024-01-05',
-                    'image'        => 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=800&q=80',
-                ],
-            ],
-            'metrics' => [
-                'total_teams'    => 4,
-                'active_teams'   => 4,
-                'courts_booked'  => 3,
-                'total_matches'  => 58,
-            ],
-        ]);
-    }
+public function index() {
+ $teams=Team::with('players')->get();
+ return Inertia::render('Teams/Index',['teams'=>$teams->map(function($t){
+ $b=Booking::with('court')->where('team_id',$t->id)->where('status','!=','cancelled')->whereDate('booking_date','>=',today())->orderBy('booking_date')->orderBy('start_time')->first();
+ return ['id'=>$t->id,'name'=>$t->name,'captain'=>$t->captain,'members'=>$t->players->pluck('name'),'skill_level'=>$t->skill_level,'court'=>$b?->court?->name,'court_booked'=>(bool)$b,'booking_date'=>$b?->booking_date?->toDateString(),'booking_time'=>$b?->start_time,'payment'=>'Not recorded','payment_amount'=>0,'wins'=>$t->wins,'losses'=>$t->losses,'matches'=>$t->wins+$t->losses,'status'=>ucfirst($t->status),'created_at'=>$t->created_at->toDateString(),'image'=>null];
+ }), 'metrics'=>['total_teams'=>$teams->count(),'active_teams'=>$teams->where('status','active')->count(),'courts_booked'=>Booking::whereNotNull('team_id')->where('status','!=','cancelled')->whereDate('booking_date',today())->distinct()->count('court_id'),'total_matches'=>$teams->sum('wins')+$teams->sum('losses')]]);
+}
+public function store(Request $r) { return $this->save($r,new Team); }
+public function update(Request $r,Team $team) { return $this->save($r,$team); }
+private function save(Request $r,Team $team) {
+ $d=$r->validate(['name'=>'required|string|max:255','captain'=>'nullable|string|max:255','members'=>'required|array|max:12','members.*'=>'nullable|string|max:255','skill_level'=>'required|in:Beginner,Intermediate,Advanced,Pro','status'=>'required|in:Active,Inactive']);
+ DB::transaction(function()use($d,$team){
+ $team->fill(['name'=>$d['name'],'captain'=>$d['captain']??null,'skill_level'=>$d['skill_level'],'status'=>strtolower($d['status'])])->save();
+ $names=array_values(array_unique(array_filter($d['members'],fn($n)=>trim($n??'')!=='')));
+ $team->players()->whereNotIn('name',$names)->update(['team_id'=>null]);
+ foreach($names as $name) Player::firstOrCreate(['team_id'=>$team->id,'name'=>$name],['status'=>'active','skill_level'=>3]);
+ }); return back()->with('success','Team saved.');
+}
+public function destroy(Team $team) { $team->delete(); return back()->with('success','Team deleted; player records preserved.'); }
+
 }

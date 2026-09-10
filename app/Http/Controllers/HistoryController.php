@@ -1,173 +1,31 @@
 <?php
-
 namespace App\Http\Controllers;
-
+use App\Models\{Booking, CafeOrder, CafeOrderItem, Client, Court, Expense, Player, StockItem, Team, Supplier, Membership, MembershipPlan, Purchase, Reconciliation, ClubSetting, SupportTicket};
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
+class HistoryController extends Controller {
 
-class HistoryController extends Controller
-{
-    private function sampleTransactions(): array
-    {
-        $items = [
-            'Cold Brew x2 - Racket x1',
-            'Espresso x1 - Padel Balls x3',
-            'Court Booking - 2h',
-            'Cappuccino x2 - Grip Tape x1',
-            'Court Booking - 1h',
-            'Iced Latte x1',
-            'Game Day Bundle x1',
-            'Court Booking - 1.5h',
-        ];
-        $clients = ['Umar Iqbal', 'Saad Khalid', 'Zohaib Ahmed', 'Fahad Khan', 'Ali Hassan'];
-        $cats    = ['Cafe', 'Cafe', 'Bookings', 'Cafe', 'Bookings', 'Cafe', 'Bundles', 'Bookings'];
-        $prices  = [198, 145, 250, 120, 125, 45, 180, 175];
-        $txns    = [];
+private function render($tab,$transactions=[],$expenses=[],$reconciliation=[]) { return Inertia::render('History/Index',compact('tab','transactions','expenses','reconciliation')+['suppliers'=>Supplier::all(['id','name']),'stockItems'=>StockItem::all(['id','name']),'metrics'=>['total_events'=>count($transactions)+count($expenses)+count($reconciliation),'events_trend'=>0,'refunds'=>0,'refunds_total'=>0,'refunds_trend'=>0,'cancellations'=>collect($transactions)->where('status','Cancelled')->count(),'cancel_trend'=>0]]); }
+public function sales() {
+ $orders=CafeOrder::with('client')->get()->map(fn($o)=>['id'=>'C-'.$o->id,'item'=>$o->items_summary??'Cafe sale','category'=>'Cafe','client'=>$o->client?->name??'Walk-in','time'=>$o->created_at->format('H:i'),'amount'=>(float)$o->total_amount,'status'=>ucfirst($o->status),'group'=>$o->order_date->toDateString()]);
+ $bookings=Booking::with(['client','court'])->get()->map(fn($b)=>['id'=>'B-'.$b->id,'item'=>$b->court->name,'category'=>'Bookings','client'=>$b->client->name,'time'=>$b->start_time,'amount'=>(float)$b->total_amount,'status'=>ucfirst($b->status),'group'=>$b->booking_date->toDateString()]);
+ return $this->render('sales',$orders->concat($bookings)->sortByDesc('group')->values());
+}
+public function purchases() { return $this->render('purchases',Purchase::with(['supplier','item'])->orderByDesc('purchase_date')->get()->map(fn($p)=>['id'=>$p->id,'item'=>$p->item->name.' x'.$p->quantity,'category'=>'Equipment','client'=>$p->supplier->name,'time'=>$p->created_at->format('H:i'),'amount'=>(float)$p->total_amount,'status'=>'Completed','group'=>$p->purchase_date->toDateString()])); }
+public function expenses() { return $this->render('expenses',[],Expense::orderByDesc('expense_date')->get()->map(fn($e)=>['id'=>$e->id,'name'=>$e->description,'category'=>$e->category,'amount'=>(float)$e->amount,'date'=>$e->expense_date->toDateString(),'by'=>'Not recorded'])); }
+public function reconciliation() { return $this->render('reconciliation',[],[],Reconciliation::with('user')->orderByDesc('date')->get()->map(fn($r)=>['id'=>$r->id,'shift'=>'Full day','cashier'=>$r->user->name,'date'=>$r->date->toDateString(),'expected'=>$r->expected,'actual'=>$r->actual,'variance'=>round($r->actual-$r->expected,2),'status'=>abs($r->actual-$r->expected)<0.01?'Balanced':($r->actual>$r->expected?'Over':'Short')])); }
+public function storeExpense(Request $r) { Expense::create($r->validate(['description'=>'required|string|max:255','category'=>'required|string|max:80','amount'=>'required|numeric|min:0.01|max:99999999','expense_date'=>'required|date_format:Y-m-d','reference'=>'nullable|string|max:255'])); return back()->with('success','Expense saved.'); }
+public function storePurchase(Request $r) {
+ $d=$r->validate(['supplier_id'=>'required|exists:suppliers,id','stock_item_id'=>'required|exists:stock_items,id','quantity'=>'required|integer|min:1|max:100000','unit_price'=>'required|numeric|min:0|max:999999','paid_amount'=>'required|numeric|min:0','purchase_date'=>'required|date_format:Y-m-d']);
+ DB::transaction(function()use($d){$item=StockItem::lockForUpdate()->findOrFail($d['stock_item_id']);$total=round($d['quantity']*$d['unit_price'],2);if($d['paid_amount']>$total)throw ValidationException::withMessages(['paid_amount'=>'Payment cannot exceed purchase total.']);Purchase::create($d+['total_amount'=>$total]);$item->quantity+=$d['quantity'];$item->status=$item->quantity<$item->min_quantity?'low_stock':'in_stock';$item->save();}); return back()->with('success','Purchase recorded and stock received.');
+}
+public function storeReconciliation(Request $r) {
+ $d=$r->validate(['date'=>'required|date_format:Y-m-d|before_or_equal:today|unique:reconciliations,date','actual'=>'required|numeric|min:0|max:99999999']);
+ $expected=(float)Booking::whereDate('booking_date',$d['date'])->where('status','completed')->where('payment_type','cash')->sum('total_amount')+(float)CafeOrder::whereDate('order_date',$d['date'])->where('status','completed')->sum('total_amount')-(float)Expense::whereDate('expense_date',$d['date'])->sum('amount')-(float)Purchase::whereDate('purchase_date',$d['date'])->sum('paid_amount');
+ Reconciliation::create($d+['user_id'=>$r->user()->id,'expected'=>$expected]);return back()->with('success','Daily reconciliation saved.');
+}
 
-        for ($i = 0; $i < 16; $i++) {
-            $idx = $i % count($items);
-            $txns[] = [
-                'id'       => 2041 + $i,
-                'item'     => $items[$idx],
-                'category' => $cats[$idx],
-                'client'   => $clients[$i % count($clients)],
-                'time'     => ($i % 3 === 0 ? '8:20 PM' : ($i % 3 === 1 ? '2:15 PM' : '11:30 AM')),
-                'amount'   => $prices[$idx],
-                'status'   => $i % 7 === 3 ? 'Refunded' : ($i % 9 === 5 ? 'Cancelled' : 'Completed'),
-                'group'    => $i < 8 ? 'Today' : 'Yesterday',
-            ];
-        }
-        return $txns;
-    }
-
-    private function sampleExpenses(): array
-    {
-        $names = ['Court Maintenance','Staff Salary','Utility Bill','Equipment Purchase','Cleaning Supplies','Marketing'];
-        $amts  = [450, 1200, 380, 850, 95, 300];
-        $cats  = ['Maintenance','Payroll','Utilities','Equipment','Supplies','Marketing'];
-        $exps  = [];
-        for ($i = 0; $i < 10; $i++) {
-            $idx = $i % count($names);
-            $exps[] = [
-                'id'       => 1001 + $i,
-                'name'     => $names[$idx],
-                'category' => $cats[$idx],
-                'amount'   => $amts[$idx],
-                'date'     => $i < 5 ? 'Today' : 'Yesterday',
-                'by'       => 'Admin',
-            ];
-        }
-        return $exps;
-    }
-
-    public function sales()
-    {
-        return Inertia::render('History/Index', [
-            'tab'          => 'sales',
-            'transactions' => $this->sampleTransactions(),
-            'expenses'     => [],
-            'metrics'      => [
-                'total_events'  => 12,
-                'events_trend'  => 6,
-                'refunds'       => 1,
-                'refunds_total' => 12.00,
-                'refunds_trend' => -9,
-                'cancellations' => 1,
-                'cancel_trend'  => 0,
-            ],
-        ]);
-    }
-
-    public function purchases()
-    {
-        $items   = ['Padel Racket x1','Padel Balls x3','Grip Tape x2','Court Shoes x1','Padel Bag x1','Wristband x4'];
-        $vendors = ['Babolat','Wilson','Head','Adidas','Nox'];
-        $prices  = [380, 45, 28, 195, 145, 18];
-        $cats    = ['Equipment','Equipment','Accessories','Footwear','Accessories','Accessories'];
-        $txns    = [];
-
-        for ($i = 0; $i < 12; $i++) {
-            $idx = $i % count($items);
-            $txns[] = [
-                'id'       => 5001 + $i,
-                'item'     => $items[$idx],
-                'category' => $cats[$idx],
-                'client'   => $vendors[$i % count($vendors)],
-                'time'     => $i % 2 === 0 ? '10:30 AM' : '3:45 PM',
-                'amount'   => $prices[$idx],
-                'status'   => $i % 8 === 3 ? 'Returned' : 'Completed',
-                'group'    => $i < 6 ? 'Today' : 'Yesterday',
-            ];
-        }
-
-        return Inertia::render('History/Index', [
-            'tab'          => 'purchases',
-            'transactions' => $txns,
-            'expenses'     => [],
-            'metrics'      => [
-                'total_events'  => 12,
-                'events_trend'  => 4,
-                'refunds'       => 1,
-                'refunds_total' => 380,
-                'refunds_trend' => -5,
-                'cancellations' => 0,
-                'cancel_trend'  => 0,
-            ],
-        ]);
-    }
-
-    public function reconciliation()
-    {
-        $sessions = [];
-        $shifts   = ['Morning (8am–2pm)', 'Afternoon (2pm–8pm)', 'Evening (8pm–Close)'];
-        $cashiers = ['Umar Iqbal', 'Saad Khalid', 'Fahad Khan'];
-
-        for ($i = 0; $i < 6; $i++) {
-            $expected = rand(800, 2500);
-            $actual   = $expected + rand(-200, 150);
-            $sessions[] = [
-                'id'          => 3001 + $i,
-                'shift'       => $shifts[$i % 3],
-                'cashier'     => $cashiers[$i % 3],
-                'date'        => $i < 3 ? 'Today' : 'Yesterday',
-                'expected'    => $expected,
-                'actual'      => $actual,
-                'variance'    => $actual - $expected,
-                'status'      => abs($actual - $expected) < 50 ? 'Balanced' : ($actual > $expected ? 'Over' : 'Short'),
-            ];
-        }
-
-        return Inertia::render('History/Index', [
-            'tab'          => 'reconciliation',
-            'transactions' => [],
-            'expenses'     => [],
-            'reconciliation' => $sessions,
-            'metrics'      => [
-                'total_events'  => count($sessions),
-                'events_trend'  => 2,
-                'refunds'       => 0,
-                'refunds_total' => 0,
-                'refunds_trend' => 0,
-                'cancellations' => 0,
-                'cancel_trend'  => 0,
-            ],
-        ]);
-    }
-
-    public function expenses()
-    {
-        return Inertia::render('History/Index', [
-            'tab'          => 'expenses',
-            'transactions' => [],
-            'expenses'     => $this->sampleExpenses(),
-            'metrics'      => [
-                'total_events'  => 10,
-                'events_trend'  => 3,
-                'refunds'       => 0,
-                'refunds_total' => 0,
-                'refunds_trend' => 0,
-                'cancellations' => 0,
-                'cancel_trend'  => 0,
-            ],
-        ]);
-    }
 }

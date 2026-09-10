@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import {
     Plus, X, Users, Trophy, CalendarDays,
@@ -77,7 +77,7 @@ const EMPTY = {
 };
 
 export default function TeamsIndex({ teams: initial = [], metrics = {}, facility }) {
-    const [teams, setTeams]         = useState(initial);
+    const teams = initial;
     const [selectedTeam, setSelected] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [editId, setEditId]       = useState(null);
@@ -104,23 +104,10 @@ export default function TeamsIndex({ teams: initial = [], metrics = {}, facility
     const removeMember = i => setForm(f => ({ ...f, members: f.members.filter((_,idx)=>idx!==i) }));
 
     const handleSave = () => {
-        const clean = {
-            ...form,
-            payment_amount: Number(form.payment_amount),
-            members: form.members.filter(m => m.trim()),
-            wins: 0, losses: 0, matches: 0,
-            created_at: new Date().toISOString().split('T')[0],
-            image: '',
-        };
-        if (editId) {
-            setTeams(ts => ts.map(t => t.id === editId ? { ...clean, id: editId, wins: t.wins, losses: t.losses, matches: t.matches } : t));
-        } else {
-            setTeams(ts => [...ts, { ...clean, id: Date.now() }]);
-        }
-        close();
+        const payload = { ...form };
+        router[editId ? 'put' : 'post'](route(editId ? 'teams.update' : 'teams.store', editId || undefined), payload, { onSuccess: close });
     };
-
-    const handleDelete = (id, e) => { e.stopPropagation(); setTeams(ts => ts.filter(t => t.id !== id)); if (selectedTeam?.id === id) setSelected(null); };
+    const handleDelete = (id, e) => { e?.stopPropagation(); router.delete(route('teams.destroy', id), { onSuccess: () => { setSelected(null); } }); };
 
     const stats = [
         { label:'Total Teams',   value: m.total_teams,   icon: Users,       accent:'text-lime-400', ring:'ring-lime-400/30' },
@@ -350,66 +337,7 @@ export default function TeamsIndex({ teams: initial = [], metrics = {}, facility
                                     ))}
                                 </div>
 
-                                {/* Court + booking */}
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">Court</label>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <button type="button" onClick={() => setForm(f=>({...f,court_booked:!f.court_booked}))}
-                                            className={`relative w-10 h-5 rounded-full transition-all ${form.court_booked ? 'bg-lime-400' : 'bg-white/15'}`}>
-                                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${form.court_booked ? 'left-5' : 'left-0.5'}`} />
-                                        </button>
-                                        <span className="text-xs text-gray-300">Court booked</span>
-                                    </div>
-                                    {form.court_booked && (
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {[['Court','court','Court 1'],['Date','booking_date',''],['Time','booking_time','6:00 PM']].map(([l,n,ph]) => (
-                                                <div key={n}>
-                                                    <label className="block text-[9px] text-gray-600 mb-1">{l}</label>
-                                                    <input name={n} value={form[n]} onChange={handleChange} placeholder={ph}
-                                                        type={n==='booking_date'?'date':'text'}
-                                                        className="w-full px-2.5 py-2 rounded-xl bg-white/[0.06] border border-white/[0.12] text-xs text-white placeholder-gray-600 focus:outline-none focus:border-lime-400/50 [color-scheme:dark]" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Payment */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">Payment</label>
-                                        <select name="payment" value={form.payment} onChange={handleChange}
-                                            className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.12] text-sm text-white focus:outline-none focus:border-lime-400/50 transition-all [color-scheme:dark]">
-                                            {['Paid','Unpaid','N/A'].map(o => <option key={o} value={o}>{o}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1.5">Amount (PKR)</label>
-                                        <input name="payment_amount" type="number" value={form.payment_amount} onChange={handleChange} placeholder="0"
-                                            className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.12] text-sm text-white placeholder-gray-600 focus:outline-none focus:border-lime-400/50 transition-all" />
-                                    </div>
-                                </div>
-
-                                {/* Members */}
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2">Team Members</label>
-                                    <div className="space-y-2">
-                                        {form.members.map((m, i) => (
-                                            <div key={i} className="flex gap-2">
-                                                <input value={m} onChange={e => setMember(i, e.target.value)} placeholder={`Player ${i+1}`}
-                                                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.12] text-sm text-white placeholder-gray-600 focus:outline-none focus:border-lime-400/50 transition-all" />
-                                                {form.members.length > 1 && (
-                                                    <button onClick={() => removeMember(i)} className="w-10 flex items-center justify-center text-gray-500 hover:text-red-400 transition-colors">
-                                                        <X className="w-3.5 h-3.5" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-                                        <button onClick={addMember} className="flex items-center gap-1.5 text-xs text-lime-400 hover:text-lime-300 transition-colors font-semibold px-2 py-1">
-                                            <Plus className="w-3.5 h-3.5" /> Add Member
-                                        </button>
-                                    </div>
-                                </div>
+                                <p className="text-sm text-gray-400">Use New Booking on the Schedule page to reserve a court for this team.</p>
                             </div>
 
                             <div className="flex gap-2.5 mt-5">

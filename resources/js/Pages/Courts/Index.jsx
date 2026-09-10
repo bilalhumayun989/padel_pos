@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Head } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import {
     Plus, X, Edit2, Trash2, MapPin, Clock, Users,
@@ -66,7 +66,7 @@ const EMPTY = {
 };
 
 export default function CourtsIndex({ courts: initialCourts = [], metrics = {}, facility }) {
-    const [courts, setCourts]       = useState(initialCourts);
+    const courts = initialCourts;
     const [showModal, setShowModal] = useState(false);
     const [editId, setEditId]       = useState(null);
     const [form, setForm]           = useState(EMPTY);
@@ -97,27 +97,21 @@ export default function CourtsIndex({ courts: initialCourts = [], metrics = {}, 
     const handleImageFile = e => {
         const file = e.target.files[0];
         if (!file) return;
-        const url = URL.createObjectURL(file);
-        setPreview(url);
-        setForm(f => ({ ...f, image: url }));
+        setPreview('');
+        setForm(f => ({ ...f, image: '' }));
     };
 
     const handleSave = () => {
-        if (editId) {
-            setCourts(cs => cs.map(c => c.id === editId ? { ...form, id: editId, price_per_hour: Number(form.price_per_hour) } : c));
-        } else {
-            setCourts(cs => [...cs, { ...form, id: Date.now(), price_per_hour: Number(form.price_per_hour) }]);
-        }
-        close();
+        const payload = { ...form };
+        router[editId ? 'put' : 'post'](route(editId ? 'courts.update' : 'courts.store', editId || undefined), payload, { onSuccess: close });
     };
-
-    const handleDelete = id => setCourts(cs => cs.filter(c => c.id !== id));
+    const handleDelete = (id, e) => { e?.stopPropagation(); router.delete(route('courts.destroy', id), { onSuccess: () => {  } }); };
 
     const stats = [
         { label:'Total Courts',    value: m.total,                          icon: Grid3x3,    accent:'text-lime-400',  ring:'ring-lime-400/30'  },
         { label:'Active',          value: m.active,                         icon: CheckCircle, accent:'text-white',     ring:'ring-white/15'     },
         { label:'Maintenance',     value: m.maintenance,                    icon: AlertTriangle, accent:'text-amber-400', ring:'ring-amber-400/25'},
-        { label:"Today's Revenue", value:`PKR ${(m.revenue_today*280).toLocaleString()}`, icon: TrendingUp, accent:'text-lime-300', ring:'ring-lime-300/25'},
+        { label:"Today's Revenue", value:`PKR ${(m.revenue_today).toLocaleString()}`, icon: TrendingUp, accent:'text-lime-300', ring:'ring-lime-300/25'},
     ];
 
     return (
@@ -273,11 +267,8 @@ export default function CourtsIndex({ courts: initialCourts = [], metrics = {}, 
                                             )}
                                         </div>
                                         <div className="flex-1 flex flex-col gap-2">
-                                            <button type="button" onClick={() => fileRef.current?.click()}
-                                                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.12] text-xs text-gray-300 hover:text-white hover:border-white/25 transition-all">
-                                                <Upload className="w-3.5 h-3.5" /> Upload Image
-                                            </button>
-                                            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
+                                            
+                                            
                                             <Input name="image" value={form.image} onChange={handleChange} placeholder="or paste image URL..." />
                                         </div>
                                     </div>
@@ -293,7 +284,7 @@ export default function CourtsIndex({ courts: initialCourts = [], metrics = {}, 
                                             <option value="Indoor">Indoor</option>
                                             <option value="Outdoor">Outdoor</option>
                                             <option value="Panoramic">Panoramic</option>
-                                            <option value="Rooftop">Rooftop</option>
+                                            
                                         </Select>
                                     </Field>
                                 </div>
@@ -329,7 +320,7 @@ export default function CourtsIndex({ courts: initialCourts = [], metrics = {}, 
                                         <Select name="status" value={form.status} onChange={handleChange}>
                                             <option value="Active">Active</option>
                                             <option value="Maintenance">Maintenance</option>
-                                            <option value="Inactive">Inactive</option>
+                                            
                                         </Select>
                                     </Field>
                                     <Field label="Flood Lights">

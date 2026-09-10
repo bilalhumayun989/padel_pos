@@ -10,6 +10,11 @@ class StockItem extends Model
     use HasFactory;
 
     protected $fillable = [
+        'supplier_id',
+        'cost',
+        'image',
+        'active',
+
         'name',
         'category',
         'quantity',
@@ -19,7 +24,11 @@ class StockItem extends Model
         'status',
     ];
 
+    public function supplier() { return $this->belongsTo(Supplier::class); }
+
     protected $casts = [
+        'active' => 'boolean',
+        'cost' => 'float',
         'quantity'     => 'integer',
         'min_quantity' => 'integer',
         'unit_price'   => 'decimal:2',

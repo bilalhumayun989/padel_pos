@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { router, Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import {
     Plus, Search, Edit2, Trash2, X,
@@ -64,8 +64,8 @@ export default function ProductsIndex({ products = [], suppliers = [], metrics =
     const m = {
         total_products: metrics.total     ?? products.length,
         active:         metrics.active    ?? products.length,
-        low_stock:      metrics.low_stock ?? 1,
-        categories:     metrics.categories ?? 3,
+        low_stock:      metrics.low_stock ?? 0,
+        categories:     metrics.categories ?? 0,
     };
 
     const filtered = useMemo(() =>
@@ -82,6 +82,8 @@ export default function ProductsIndex({ products = [], suppliers = [], metrics =
     const openEdit = (p) => { setForm({ ...p, price: String(p.price), cost: String(p.cost), stock: String(p.stock) }); setEditItem(p.id); setShowModal(true); };
     const closeModal = () => { setShowModal(false); setEditItem(null); };
     const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+
+    const handleSave = () => router[editItem ? 'put' : 'post'](route(editItem ? 'products.update' : 'products.store', editItem || undefined), form, { onSuccess: closeModal });
 
     const statCards = [
         { label:'Total Products', value: m.total_products, icon: LayoutList,    accent:'text-lime-400',  ring:'ring-lime-400/30'  },
@@ -321,7 +323,7 @@ export default function ProductsIndex({ products = [], suppliers = [], metrics =
                                     className="flex-1 py-2.5 rounded-xl border border-white/[0.18] text-gray-300 hover:text-white hover:bg-white/[0.08] text-sm font-semibold transition-all">
                                     Cancel
                                 </button>
-                                <button
+                                <button onClick={handleSave}
                                     className="flex-1 py-2.5 rounded-xl bg-lime-400 text-black text-sm font-extrabold hover:bg-lime-300 transition-all shadow-[0_0_16px_rgba(163,230,53,0.35)]">
                                     {editItem ? 'Save Changes' : 'Add Product'}
                                 </button>

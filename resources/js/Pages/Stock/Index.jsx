@@ -1,3 +1,4 @@
+import RecordForm from '@/Components/RecordForm';
 import React from 'react';
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -114,12 +115,12 @@ function ItemCard({ item }) {
 /* ─── Page ─────────────────────────────────────────────────────── */
 export default function StockIndex({ metrics, items = [], facility }) {
     const m = {
-        total_skus:    metrics?.total_skus    ?? 433,
-        skus_trend:    metrics?.skus_trend    ?? 6,
-        low_stock:     metrics?.low_stock     ?? 36,
-        low_trend:     metrics?.low_trend     ?? -9,
-        monthly_sales: metrics?.monthly_sales ?? 1220,
-        sales_trend:   metrics?.sales_trend   ?? 9,
+        total_skus:    metrics?.total_skus    ?? 0,
+        skus_trend:    metrics?.skus_trend    ?? 0,
+        low_stock:     metrics?.low_stock     ?? 0,
+        low_trend:     metrics?.low_trend     ?? 0,
+        monthly_sales: metrics?.monthly_sales ?? 0,
+        sales_trend:   metrics?.sales_trend   ?? 0,
     };
 
     return (
@@ -162,7 +163,8 @@ export default function StockIndex({ metrics, items = [], facility }) {
                 {/* ── Row 3 — 3-col item grid ── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {items.map(item => (
-                        <ItemCard key={item.id} item={item} />
+                        <div key={item.id}><ItemCard item={item} /><RecordForm label="Adjust Stock" method="put" endpoint={route('stock.update',item.id)} fields={[
+ {name:'quantity',label:'Quantity',type:'number',value:item.stock,required:true}, {name:'min_quantity',label:'Reorder threshold',type:'number',value:item.min_quantity,required:true}]} /></div>
                     ))}
                 </div>
             </div>

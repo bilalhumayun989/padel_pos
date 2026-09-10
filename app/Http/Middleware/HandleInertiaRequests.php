@@ -31,6 +31,8 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
+            'flash' => ['success' => fn () => $request->session()->get('success')],
+            'facility' => fn () => ['name' => \App\Models\ClubSetting::first()?->name ?? 'Skyline Padel', 'subtext' => 'Padel Club'],
             'auth' => [
                 'user' => $request->user(),
             ],

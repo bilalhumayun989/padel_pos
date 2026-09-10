@@ -88,9 +88,10 @@ function CourtCard({ court, selected, onClick }) {
     );
 }
 
-export default function BookingCreate({ courts = [], time_slots = [], clients = [], facility }) {
-    const { data, setData, post, processing } = useForm({
+export default function BookingCreate({ courts = [], time_slots = [], clients = [], teams = [], facility }) {
+    const { data, setData, post, processing, errors } = useForm({
         court_id:     '',
+        team_id: '',
         date:         '',
         start_time:   '',
         duration:     1,
@@ -161,6 +162,8 @@ export default function BookingCreate({ courts = [], time_slots = [], clients = 
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    <label className="text-gray-300 text-sm">Team (optional)<select className="ml-3 bg-slate-800 rounded-lg" value={data.team_id} onChange={e=>setData('team_id',e.target.value)}><option value="">No team</option>{teams.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
+                    {Object.values(errors).map((e,i) => <p key={i} className="text-red-300">{e}</p>)}
 
                     {/* ══ STEP 1 — Court + Date + Time ══ */}
                     {step === 1 && (
@@ -393,7 +396,7 @@ export default function BookingCreate({ courts = [], time_slots = [], clients = 
                                         <div className="flex justify-between items-center pt-3 border-t border-white/15 mt-1">
                                             <span className="text-sm font-bold text-white">Total</span>
                                             <span className="text-xl font-bold text-lime-400 drop-shadow-[0_0_10px_rgba(163,230,53,0.4)]">
-                                                PKR {(totalPrice * 280).toLocaleString()}
+                                                PKR {(totalPrice ).toLocaleString()}
                                             </span>
                                         </div>
                                     </div>

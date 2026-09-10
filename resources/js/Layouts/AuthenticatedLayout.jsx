@@ -22,11 +22,12 @@ import {
     LayoutList,
     Grid3x3,
     Crown,
-    UsersRound
+    UsersRound,
+    BarChart3
 } from 'lucide-react';
 
 export default function AuthenticatedLayout({ children, facility = { name: 'SKYLINE PADDLE COURT', subtext: 'Main Court' } }) {
-    const { auth } = usePage().props;
+    const { auth, errors = {}, flash = {} } = usePage().props;
     const user = auth?.user || { name: 'Admin', email: 'admin@skylinepadel.com' };
     // Persist collapsed state across page navigations
     const [collapsed, setCollapsed] = useState(() => {
@@ -59,6 +60,7 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
         { name: 'Products',    routeName: 'products.cafe',      icon: LayoutList  },
         { name: 'Courts',      routeName: 'courts.index',       icon: Grid3x3     },
         { name: 'Memberships', routeName: 'memberships.index',  icon: Crown       },
+        { name: 'Reports',     routeName: 'reports.revenue',    icon: BarChart3   },
     ];
 
     const bottomNavItems = [
@@ -74,6 +76,9 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
             }
             if (name === 'products.cafe') {
                 return route().current('products.cafe') || route().current('products.paddle') || route().current('products.index');
+            }
+            if (name === 'reports.revenue') {
+                return route().current('reports.revenue') || route().current('reports.expenses') || route().current('reports.bookings') || route().current('reports.cafe') || route().current('reports.players');
             }
             return route().current(name);
         } catch {
@@ -321,7 +326,10 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 flex flex-col">{children}</main>
+                <main className="flex-1 flex flex-col">
+                    {flash.success && <div role="status" className="p-3 mb-3 bg-lime-900 text-lime-100 rounded-xl">{flash.success}</div>}
+                    {Object.keys(errors).length > 0 && <div role="alert" className="fixed top-4 right-4 z-[100] max-w-md p-4 bg-red-950 text-red-100 rounded-xl">{Object.values(errors).map((error,i) => <p key={i}>{error}</p>)}</div>}
+                    {children}</main>
             </div>
         </div>
     );

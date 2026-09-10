@@ -1,3 +1,4 @@
+import RecordForm from '@/Components/RecordForm';
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -91,34 +92,28 @@ function PlayerCard({ player }) {
 }
 
 /* ─── Page ────────────────────────────────────────────────────── */
-export default function PlayersIndex({ metrics, players = [], facility }) {
+export default function PlayersIndex({ metrics, players = [], teams = [], facility }) {
     const [skillFilter, setSkillFilter] = useState('Any Skill Level');
     const [statusFilter, setStatusFilter] = useState('Any Skill Level');
 
     const data = {
-        active_players: metrics?.active_players ?? 43,
-        players_trend:  metrics?.players_trend  ?? 6,
-        matches_played: metrics?.matches_played ?? 36,
-        matches_trend:  metrics?.matches_trend  ?? 9,
+        active_players: metrics?.active_players ?? 0,
+        players_trend:  metrics?.players_trend  ?? 0,
+        matches_played: metrics?.matches_played ?? 0,
+        matches_trend:  metrics?.matches_trend  ?? 0,
     };
 
-    /* Demo fallback players */
-    const playerList = players.length > 0 ? players : Array.from({ length: 10 }, (_, i) => ({
-        id: i + 1,
-        name: 'Alex Mercer',
-        tier: 'Pro Member',
-        avatar: `https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=80&q=80`,
-        skill: 5.5,
-        skill_max: 7.0,
-        matches: 142,
-        last_visit: 'Today',
-    }));
-
-    const skillLevels  = ['Any Skill Level', 'Beginner (1-3)', 'Intermediate (4-5)', 'Advanced (6-7)'];
-    const statusLevels = ['Any Skill Level', 'Active', 'Inactive', 'Paused'];
+    const skillLevels = ['Any Skill Level', 'Beginner (1-2)', 'Intermediate (3)', 'Advanced (4-5)'];
+    const statusLevels = ['Any Status', 'Active', 'Inactive', 'Suspended'];
+    const playerList = players.filter(p => (statusFilter === 'Any Skill Level' || statusFilter === 'Any Status' || p.status === statusFilter.toLowerCase()) && (skillFilter === 'Any Skill Level' || (skillFilter.startsWith('Beginner') && p.skill <= 2) || (skillFilter.startsWith('Intermediate') && p.skill === 3) || (skillFilter.startsWith('Advanced') && p.skill >= 4)));
 
     return (
         <AuthenticatedLayout facility={facility}>
+            <div className="flex flex-wrap gap-3 mb-4"><RecordForm label="Add Player" endpoint={route('players.store')} fields={[
+ {name:'name',label:'Name',required:true},{name:'team_id',label:'Team',options:teams.map(t=>({value:t.id,label:t.name}))},
+ {name:'skill_level',label:'Skill (1-5)',type:'number',value:3},{name:'position',label:'Position'},
+ {name:'status',label:'Status',value:'active',options:['active','inactive','suspended'].map(v=>({value:v,label:v}))}
+ ]} /></div>
             <Head title="Padel POS – Players" />
 
             <div className="flex flex-col flex-1 w-full gap-5">
@@ -208,9 +203,7 @@ export default function PlayersIndex({ metrics, players = [], facility }) {
                     </div>
 
                     {/* Add New Player */}
-                    <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-lime-400 text-black text-xs font-extrabold uppercase tracking-wider hover:bg-lime-300 transition-all shadow-[0_0_20px_rgba(163,230,53,0.35)]">
-                        <Plus className="w-4 h-4" /> Add New Player
-                    </button>
+                    
                 </div>
 
                 {/* ── Row 3 — Player Ranking Grid ── */}

@@ -11,6 +11,11 @@ class Team extends Model
     use HasFactory;
 
     protected $fillable = [
+        'captain',
+        'skill_level',
+        'wins',
+        'losses',
+
         'name',
         'max_players',
         'color',

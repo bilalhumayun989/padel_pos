@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Plus, Minus, Trash2, ShoppingCart, MoreVertical } from 'lucide-react';
 
@@ -7,12 +7,14 @@ const TAX_RATE = 0.05;
 const TABS = ['All', 'Cafe', 'Bundles'];
 
 export default function CafeIndex({ products = [], facility }) {
+    const [processing, setProcessing] = useState(false);
+    const checkout = () => { setProcessing(true); router.post(route('cafe.store'), { items: cart.map(i => ({ id: i.id, qty: i.qty })) }, { onSuccess: () => setCart([]), onFinish: () => setProcessing(false) }); };
     const [activeTab, setActiveTab] = useState('All');
 
     // Load cart from localStorage on mount, fallback to empty
     const [cart, setCart] = useState(() => {
         try {
-            const saved = localStorage.getItem('cafe_cart');
+            const saved = localStorage.getItem('padel_mysql_cart_v1');
             return saved ? JSON.parse(saved) : [];
         } catch {
             return [];
@@ -22,7 +24,7 @@ export default function CafeIndex({ products = [], facility }) {
     // Persist cart to localStorage whenever it changes
     useEffect(() => {
         try {
-            localStorage.setItem('cafe_cart', JSON.stringify(cart));
+            localStorage.setItem('padel_mysql_cart_v1', JSON.stringify(cart));
         } catch {}
     }, [cart]);
 
@@ -211,7 +213,8 @@ export default function CafeIndex({ products = [], facility }) {
 
                             {/* Checkout */}
                             <button
-                                disabled={cart.length === 0}
+                                onClick={checkout}
+                                disabled={processing || cart.length === 0}
                                 className={`w-full py-3 rounded-2xl text-sm font-extrabold tracking-wide flex items-center justify-center gap-2 transition-all duration-200 ${
                                     cart.length > 0
                                         ? 'bg-lime-400 text-black hover:bg-lime-300 shadow-[0_0_20px_rgba(163,230,53,0.35)]'

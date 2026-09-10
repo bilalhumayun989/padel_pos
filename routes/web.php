@@ -16,6 +16,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CourtController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -25,6 +26,31 @@ Route::get('/', [DashboardController::class, 'index'])
     ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::patch('/bookings/{booking}', [BookingController::class, 'update'])->name('bookings.update');
+    Route::post('/courts', [CourtController::class, 'store'])->name('courts.store');
+    Route::put('/courts/{court}', [CourtController::class, 'update'])->name('courts.update');
+    Route::delete('/courts/{court}', [CourtController::class, 'destroy'])->name('courts.destroy');
+    Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
+    Route::put('/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
+    Route::delete('/teams/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
+    Route::post('/memberships', [MembershipController::class, 'store'])->name('memberships.store');
+    Route::put('/memberships/{membership}', [MembershipController::class, 'update'])->name('memberships.update');
+    Route::delete('/memberships/{membership}', [MembershipController::class, 'destroy'])->name('memberships.destroy');
+    Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+    Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
+    Route::post('/players', [PlayerController::class, 'store'])->name('players.store');
+    Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
+    Route::post('/cafe', [CafeController::class, 'store'])->name('cafe.store');
+    Route::post('/memberships/enroll', [MembershipController::class, 'enroll'])->name('memberships.enroll');
+    Route::post('/history/expenses', [HistoryController::class, 'storeExpense'])->name('expenses.store');
+    Route::post('/history/purchases', [HistoryController::class, 'storePurchase'])->name('purchases.store');
+    Route::post('/history/reconciliation', [HistoryController::class, 'storeReconciliation'])->name('reconciliation.store');
+    Route::post('/support', [SupportController::class, 'store'])->name('support.store');
+    Route::put('/stock/{stock}', [StockController::class, 'update'])->name('stock.update');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+
     Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
     Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
     Route::get('/cafe', [CafeController::class, 'index'])->name('cafe.index');
@@ -38,7 +64,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/products/paddle',  [ProductController::class, 'paddle'])->name('products.paddle');
     Route::get('/courts',           [CourtController::class, 'index'])->name('courts.index');
     Route::get('/memberships',      [MembershipController::class, 'index'])->name('memberships.index');
-    Route::get('/teams',            [TeamController::class, 'index'])->name('teams.index');
+    Route::get('/teams',             [TeamController::class,  'index'])->name('teams.index');
+    Route::get('/reports/revenue',   [ReportController::class,'revenue'])->name('reports.revenue');
+    Route::get('/reports/expenses',  [ReportController::class,'expenses'])->name('reports.expenses');
+    Route::get('/reports/bookings',  [ReportController::class,'bookings'])->name('reports.bookings');
+    Route::get('/reports/cafe',      [ReportController::class,'cafe'])->name('reports.cafe');
+    Route::get('/reports/players',   [ReportController::class,'players'])->name('reports.players');
     Route::get('/history/sales',          [HistoryController::class, 'sales'])->name('history.sales');
     Route::get('/history/purchases',      [HistoryController::class, 'purchases'])->name('history.purchases');
     Route::get('/history/expenses',       [HistoryController::class, 'expenses'])->name('history.expenses');

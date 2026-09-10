@@ -1,3 +1,4 @@
+import RecordForm from '@/Components/RecordForm';
 import React from 'react';
 import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -13,10 +14,10 @@ import {
 
 export default function ClientsIndex({ metrics, clients, facility }) {
     const data = {
-        total_clients: metrics?.total_clients ?? 43,
-        clients_trend: metrics?.clients_trend ?? 6,
-        today_bookings: metrics?.today_bookings ?? 36,
-        bookings_trend: metrics?.bookings_trend ?? 9,
+        total_clients: metrics?.total_clients ?? 0,
+        clients_trend: metrics?.clients_trend ?? 0,
+        today_bookings: metrics?.today_bookings ?? 0,
+        bookings_trend: metrics?.bookings_trend ?? 0,
     };
 
     const clientList = clients || [];
@@ -31,6 +32,10 @@ export default function ClientsIndex({ metrics, clients, facility }) {
 
     return (
         <AuthenticatedLayout facility={facility}>
+            <div className="flex flex-wrap gap-3 mb-4"><RecordForm label="Add Client" endpoint={route('clients.store')} fields={[
+ {name:'name',label:'Name',required:true},{name:'email',label:'Email',type:'email'},{name:'phone',label:'Phone'},
+ {name:'status',label:'Status',value:'active',options:['active','paused','inactive'].map(v=>({value:v,label:v}))}
+ ]} /></div>
             <Head title="Padel POS - Clients" />
 
             <div className="flex flex-col flex-1 min-h-[calc(100vh-6.5rem)] py-2 max-w-[1600px] mx-auto w-full">

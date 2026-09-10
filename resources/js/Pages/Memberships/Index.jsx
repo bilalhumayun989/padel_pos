@@ -1,5 +1,6 @@
+import RecordForm from '@/Components/RecordForm';
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { router, Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import {
     Plus, X, Edit2, Trash2, Check, Crown,
@@ -68,8 +69,8 @@ const EMPTY = {
     perks: [''],
 };
 
-export default function MembershipsIndex({ plans: initialPlans = [], metrics = {}, facility }) {
-    const [plans, setPlans]         = useState(initialPlans);
+export default function MembershipsIndex({ plans: initialPlans = [], metrics = {}, clients = [], facility }) {
+    const plans = initialPlans;
     const [showModal, setShowModal] = useState(false);
     const [editId, setEditId]       = useState(null);
     const [form, setForm]           = useState(EMPTY);
@@ -96,17 +97,10 @@ export default function MembershipsIndex({ plans: initialPlans = [], metrics = {
     const removePerk = (i)  => setForm(f => ({ ...f, perks: f.perks.filter((_,idx)=>idx!==i) }));
 
     const handleSave = () => {
-        const clean = { ...form, price: Number(form.price), duration: Number(form.duration), subscribers: 0,
-            perks: form.perks.filter(p => p.trim()) };
-        if (editId) {
-            setPlans(ps => ps.map(p => p.id === editId ? { ...clean, id: editId, subscribers: ps.find(x=>x.id===editId)?.subscribers??0 } : p));
-        } else {
-            setPlans(ps => [...ps, { ...clean, id: Date.now() }]);
-        }
-        close();
+        const payload = { ...form };
+        router[editId ? 'put' : 'post'](route(editId ? 'memberships.update' : 'memberships.store', editId || undefined), payload, { onSuccess: close });
     };
-
-    const handleDelete = id => setPlans(ps => ps.filter(p => p.id !== id));
+    const handleDelete = (id, e) => { e?.stopPropagation(); router.delete(route('memberships.destroy', id), { onSuccess: () => {  } }); };
 
     const stats = [
         { label:'Total Plans',     value: m.total_plans,                             icon: Crown,       accent:'text-lime-400', ring:'ring-lime-400/30'  },
@@ -117,6 +111,11 @@ export default function MembershipsIndex({ plans: initialPlans = [], metrics = {
 
     return (
         <AuthenticatedLayout facility={facility}>
+            <div className="flex flex-wrap gap-3 mb-4"><RecordForm label="Enroll Client" endpoint={route('memberships.enroll')} fields={[
+ {name:'client_id',label:'Client',required:true,options:clients.map(c=>({value:c.id,label:c.name}))},
+ {name:'membership_plan_id',label:'Plan',required:true,options:plans.filter(p=>p.status==='Active').map(p=>({value:p.id,label:p.name}))},
+ {name:'starts_at',label:'Start Date',type:'date',required:true}
+ ]} /></div>
             <Head title="Padel POS – Memberships" />
 
             <div className="flex flex-col flex-1 w-full gap-5">

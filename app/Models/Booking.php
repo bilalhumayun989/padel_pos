@@ -11,6 +11,10 @@ class Booking extends Model
     use HasFactory;
 
     protected $fillable = [
+        'team_id',
+        'players',
+        'payment_type',
+
         'client_id',
         'court_id',
         'booking_date',

@@ -1,42 +1,20 @@
 <?php
-
 namespace App\Http\Controllers;
-
+use App\Models\{Booking, CafeOrder, CafeOrderItem, Client, Court, Expense, Player, StockItem, Team, Supplier, Membership, MembershipPlan, Purchase, Reconciliation, ClubSetting, SupportTicket};
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
+class ScheduleController extends Controller {
 
-class ScheduleController extends Controller
-{
-    public function index()
-    {
-        $courts = [
-            ['id' => 1, 'name' => 'Court 1', 'type' => 'Indoor',    'active' => true],
-            ['id' => 2, 'name' => 'Court 2', 'type' => 'Indoor',    'active' => true],
-            ['id' => 3, 'name' => 'Court 3', 'type' => 'Panoramic', 'active' => true],
-            ['id' => 4, 'name' => 'Court 4', 'type' => 'Outdoor',   'active' => false],
-            ['id' => 5, 'name' => 'Court 5', 'type' => 'Indoor',    'active' => true],
-        ];
+public function index(Request $request) {
+ $data=$request->validate(['date'=>'nullable|date_format:Y-m-d']); $date=$data['date']??now()->toDateString();
+ return Inertia::render('Schedule/Index',[
+ 'courts'=>Court::all()->map(fn($c)=>['id'=>$c->id,'name'=>$c->name,'type'=>ucfirst($c->type),'active'=>$c->status!=='maintenance']),
+ 'bookings'=>Booking::with('client')->whereDate('booking_date',$date)->where('status','!=','cancelled')->get()->map(fn($b)=>['booking_status'=>$b->status,'id'=>$b->id,'court_id'=>$b->court_id,'team'=>$b->client->name,'players'=>$b->players,'ratio'=>$b->players.'/4','start'=>(int)substr($b->start_time,0,2)+(int)substr($b->start_time,3,2)/60,'end'=>(int)substr($b->end_time,0,2)+(int)substr($b->end_time,3,2)/60,'status'=>$b->status==='pending'?'reserved':'booked','avatars'=>[]]),
+ 'today'=>Carbon::parse($date)->format('l, M d'), 'date'=>$date,
+ ]);
+}
 
-        $bookings = [
-            // Court 1
-            ['id'=>1,'court_id'=>1,'team'=>'Team Alpha',  'players'=>12,'ratio'=>'4/4','start'=>8, 'end'=>13,'status'=>'booked','avatars'=>['A','B','C']],
-            ['id'=>2,'court_id'=>1,'team'=>'Team Smashers','players'=>12,'ratio'=>'4/4','start'=>13,'end'=>17,'status'=>'reserved','avatars'=>['D','E','F']],
-            // Court 2
-            ['id'=>3,'court_id'=>2,'team'=>'Team Alpha',  'players'=>12,'ratio'=>'4/4','start'=>8, 'end'=>13,'status'=>'booked','avatars'=>['A','B','C']],
-            ['id'=>4,'court_id'=>2,'team'=>'Team Smashers','players'=>12,'ratio'=>'4/4','start'=>13,'end'=>17,'status'=>'reserved','avatars'=>['D','E','F']],
-            // Court 3
-            ['id'=>5,'court_id'=>3,'team'=>'Team Alpha',  'players'=>12,'ratio'=>'4/4','start'=>8, 'end'=>13,'status'=>'booked','avatars'=>['A','B','C']],
-            ['id'=>6,'court_id'=>3,'team'=>'Team Smashers','players'=>12,'ratio'=>'4/4','start'=>13,'end'=>17,'status'=>'reserved','avatars'=>['D','E','F']],
-            // Court 4
-            ['id'=>7,'court_id'=>4,'team'=>'Team Alpha',  'players'=>12,'ratio'=>'4/4','start'=>8, 'end'=>13,'status'=>'booked','avatars'=>['A','B','C']],
-            ['id'=>8,'court_id'=>4,'team'=>'Team Smashers','players'=>12,'ratio'=>'4/4','start'=>13,'end'=>17,'status'=>'reserved','avatars'=>['D','E','F']],
-            // Court 5 — maintenance
-            ['id'=>9,'court_id'=>5,'team'=>'Maintenance','players'=>0,'ratio'=>'','start'=>8,'end'=>20,'status'=>'maintenance','avatars'=>[]],
-        ];
-
-        return Inertia::render('Schedule/Index', [
-            'courts'   => $courts,
-            'bookings' => $bookings,
-            'today'    => now()->format('l, M d'),
-        ]);
-    }
 }
