@@ -1,3 +1,4 @@
+import { PADEL_BACKGROUND } from '@/lib/images';
 import { Link } from '@inertiajs/react';
 import { Trophy } from 'lucide-react';
 
@@ -6,7 +7,7 @@ export default function GuestLayout({ children }) {
         <div
             className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8 text-gray-100 sm:px-6 lg:px-8"
             style={{
-                backgroundImage: "url('/images/padel_hero.png')",
+                backgroundImage: `url("${PADEL_BACKGROUND}")`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',

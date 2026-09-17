@@ -1,3 +1,4 @@
+import { PADEL_BACKGROUND, PADEL_LOGO } from '@/lib/images';
 import React, { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import {
@@ -91,7 +92,7 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
             {/* Fullscreen Padel Court Background Image */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
                 <img
-                    src="/images/padel_hero.png"
+                    src={PADEL_BACKGROUND}
                     alt="Padel Court Background"
                     className="absolute inset-0 h-full w-full object-cover object-top"
                     style={{ objectPosition: 'center top' }}
@@ -125,7 +126,7 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
                                 {/* Logo + name — static, never changes */}
                                 <div className="hidden lg:flex items-center gap-2.5">
                                     <img
-                                        src="/images/logo.png"
+                                        src={PADEL_LOGO}
                                         alt="Paddle Pro"
                                         className="w-8 h-8 object-contain rounded-xl flex-shrink-0"
                                     />
@@ -157,7 +158,7 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
                                 <div className="relative w-8 h-8">
                                     {/* Logo — fades out on hover */}
                                     <img
-                                        src="/images/logo.png"
+                                        src={PADEL_LOGO}
                                         alt="Paddle Pro"
                                         className={`absolute inset-0 w-8 h-8 object-contain rounded-xl transition-all duration-200 ${
                                             logoHovered ? 'opacity-0 scale-75' : 'opacity-100 scale-100'

@@ -1,3 +1,4 @@
+import { PADEL_BACKGROUND } from '@/lib/images';
 import RecordForm from '@/Components/RecordForm';
 import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
@@ -9,7 +10,7 @@ function GlassCard({ className = '', children, tint = 'rgba(0,0,0,0)' }) {
     return (
         <div className={`relative overflow-hidden rounded-3xl border border-white/[0.14] shadow-[0_8px_32px_rgba(0,0,0,0.5)] ${className}`}>
             <img
-                src="/images/padel_hero.png"
+                src={PADEL_BACKGROUND}
                 alt=""
                 aria-hidden="true"
                 className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
