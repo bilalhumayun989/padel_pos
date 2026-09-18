@@ -150,7 +150,7 @@ class DatabaseSeeder extends Seeder
             }
 
             foreach ([
-                ['Padel Balls (Babolat)', 'equipment', 84, 20, 12],
+                [/*  */'Padel Balls (Babolat)', 'equipment', 84, 20, 12],
                 ['Padel Rackets (Head)', 'equipment', 15, 5, 150],
                 ['Grip Tapes', 'equipment', 50, 10, 5],
                 ['Bottled Water', 'cafe', 120, 24, 2],

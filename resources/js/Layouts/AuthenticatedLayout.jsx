@@ -27,7 +27,7 @@ import {
     BarChart3
 } from 'lucide-react';
 
-export default function AuthenticatedLayout({ children, facility = { name: 'SKYLINE PADDLE COURT', subtext: 'Main Court' } }) {
+export default function AuthenticatedLayout({ children, headerContent, facility = { name: 'SKYLINE PADDLE COURT', subtext: 'Main Court' } }) {
     const { auth, errors = {}, flash = {}, demo = {} } = usePage().props;
     const user = auth?.user || { name: 'Admin', email: 'admin@skylinepadel.com' };
     // Persist collapsed state across page navigations
@@ -256,7 +256,7 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
                 collapsed ? 'lg:ml-28' : 'lg:ml-72'
             }`} style={{ isolation: 'isolate' }}>
                 {/* Topbar Header */}
-                <header className="flex items-center justify-between lg:justify-end gap-3 py-2 mb-2">
+                <header className="flex flex-wrap items-center justify-between gap-3 py-2 mb-2">
                     {/* Mobile Hamburger Toggle */}
                     <button
                         onClick={() => setMobileOpen(true)}
@@ -267,7 +267,13 @@ export default function AuthenticatedLayout({ children, facility = { name: 'SKYL
                         <span className="text-xs font-semibold text-gray-300">Menu</span>
                     </button>
 
-                    <div className="flex items-center gap-3">
+                    {headerContent && (
+                        <div className="order-last w-full min-w-0 xl:order-none xl:w-auto xl:flex-1">
+                            {headerContent}
+                        </div>
+                    )}
+
+                    <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
                         {demo.active && (
                             <div className="hidden sm:flex items-center gap-2 rounded-2xl border border-amber-300/35 bg-amber-300/15 px-3.5 py-2 text-amber-100 shadow-[0_0_18px_rgba(251,191,36,0.12)]" role="status">
                                 <span className="h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.8)]" />
