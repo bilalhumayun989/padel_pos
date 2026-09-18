@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Court;
 use App\Models\Expense;
 use App\Models\Player;
+use App\Models\Reconciliation;
 use App\Models\StockItem;
 use App\Models\Team;
 use App\Models\User;
@@ -18,6 +19,27 @@ use Tests\TestCase;
 class DatabaseSeederTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_seed_preserves_a_demo_reconciliation_on_the_same_date(): void
+    {
+        $this->travelTo(now()->startOfDay()->setHour(12));
+        $user = User::factory()->create();
+        $date = today()->subDay()->toDateString();
+        $record = Reconciliation::create([
+            'user_id' => $user->id, 'date' => $date,
+            'expected' => 123, 'actual' => 120, 'is_demo' => true,
+        ]);
+
+        $this->seed();
+
+        $this->assertSame(1, Reconciliation::withoutGlobalScope('demo_workspace')->whereDate('date', $date)->count());
+        $this->assertDatabaseHas('reconciliations', [
+            'id' => $record->id, 'user_id' => $user->id,
+            'expected' => 123, 'actual' => 120, 'is_demo' => true,
+        ]);
+        $this->assertDatabaseHas('users', ['email' => 'admin@gmail.com']);
+        $this->assertSame(180, Booking::count());
+    }
 
     public function test_demo_seed_is_repeatable_and_preserves_existing_data(): void
     {

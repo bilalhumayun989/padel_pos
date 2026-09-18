@@ -192,7 +192,8 @@ class DatabaseSeeder extends Seeder
                 + CafeOrder::whereDate('order_date', $reconciliationDate)->where('status', 'completed')->sum('total_amount')
                 - Expense::whereDate('expense_date', $reconciliationDate)->sum('amount')
                 - Purchase::whereDate('purchase_date', $reconciliationDate)->sum('paid_amount');
-            if (! Reconciliation::whereDate('date', $reconciliationDate)->exists()) {
+            // The date is unique across both regular and demo workspaces.
+            if (! Reconciliation::withoutGlobalScope('demo_workspace')->whereDate('date', $reconciliationDate)->exists()) {
                 Reconciliation::create([
                     'user_id' => $admin->id, 'date' => $reconciliationDate,
                     'expected' => $expected, 'actual' => $expected,
