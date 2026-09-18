@@ -3,6 +3,8 @@ import laravel from 'laravel-vite-plugin';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
+    // Resolve chunk preloads beside the bundle, including under /padel.
+    base: './',
     build: {
         // Open browser tabs can still request chunks from the previous build.
         emptyOutDir: false,
