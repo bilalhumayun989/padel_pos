@@ -27,7 +27,7 @@ use Illuminate\Support\Str;
 
 class DemoController extends Controller
 {
-    public function enter(): RedirectResponse
+    public function enter()
     {
         $demo = User::firstOrCreate(['email' => 'demo@skylinepadel.com'], [
             'name' => 'Demo User',
@@ -43,7 +43,7 @@ class DemoController extends Controller
 
         Auth::guard('web')->login($demo, true);
 
-        return redirect()->route('dashboard');
+        return app(DashboardController::class)->index();
     }
 
     private function provisionDefaults(User $demo): array
