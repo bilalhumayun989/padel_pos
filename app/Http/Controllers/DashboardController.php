@@ -43,8 +43,34 @@ public function index() {
  'stock_percentage'=>$stock?round(StockItem::where('quantity','>',0)->whereColumn('quantity','>=','min_quantity')->count()/$stock*100):0,'stock_trend'=>0],
  'analytics'=>['week'=>$week,'booking_statuses'=>$bookingStatuses,'courts'=>$courtPerformance],
  'operations'=>['clients'=>Client::count(),'active_memberships'=>Membership::whereDate('starts_at','<=',$today)->whereDate('ends_at','>=',$today)->count(),'low_stock'=>StockItem::whereColumn('quantity','<','min_quantity')->count(),'open_tickets'=>SupportTicket::where('status','open')->count()],
- 'teams'=>Team::withCount(['players'=>fn($q)=>$q->where('status','active')])->get()->map(fn($t)=>['active'=>$t->status==='active','id'=>$t->id,'name'=>$t->name,'players_count'=>$t->players_count,'max_players'=>$t->max_players,'ready_ratio'=>min(4,$t->players_count).'/4']),
- 'recentBookings'=>Client::orderByDesc('last_visit')->take(4)->get()->map(fn($c)=>['id'=>$c->id,'name'=>$c->name,'status'=>ucfirst($c->status),'last_visit'=>$c->last_visit?->diffForHumans()??'No visits'])]);
+ 'teams'=>$this->teamSnapshot(),
+ 'recentBookings'=>Booking::with('client')->orderByDesc('created_at')->orderByDesc('id')->take(4)->get()->map(fn($booking)=>[
+  'id'=>$booking->id, 'name'=>$booking->client?->name ?? 'Guest',
+  'status'=>ucfirst($booking->status), 'last_visit'=>$booking->created_at?->diffForHumans() ?? 'Just now',
+ ])]);
 }
 
+private function teamSnapshot()
+{
+ $now = now();
+ $bookings = Booking::whereDate('booking_date', $now->toDateString())
+  ->whereIn('status', ['confirmed', 'pending'])->whereNotNull('team_id')
+  ->orderBy('start_time')->get()->groupBy('team_id');
+
+ return Team::withCount(['players'=>fn($query)=>$query->where('status', 'active')])->get()->map(function ($team) use ($bookings, $now) {
+  $sessions = $bookings->get($team->id, collect());
+  $live = $sessions->first(fn($booking)=>$booking->status === 'confirmed' && $booking->start_time <= $now->format('H:i:s') && $booking->end_time > $now->format('H:i:s'));
+  $next = $sessions->first(fn($booking)=>$booking->start_time > $now->format('H:i:s'));
+  $session = $live ?? $next;
+  $time = $session ? Carbon::parse($now->toDateString().' '.($live ? $session->end_time : $session->start_time)) : null;
+
+  return [
+   'id'=>$team->id, 'name'=>$team->name, 'players_count'=>$team->players_count,
+   'max_players'=>$team->max_players, 'active'=>(bool)$live,
+   'session_status'=>$live ? 'Live now' : ($next ? ($next->status === 'pending' ? 'Pending' : 'Up next') : 'No session'),
+   'session_time'=>$time ? ($live ? 'Ends ' : 'Starts ').$time->diffForHumans($now) : 'Nothing scheduled today',
+   'ready_ratio'=>min(4,$team->players_count).'/4',
+  ];
+ });
+}
 }
