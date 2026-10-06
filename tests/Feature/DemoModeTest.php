@@ -70,19 +70,26 @@ class DemoModeTest extends TestCase
     {
         $this->get('/demo');
 
-        $this->get('/clients')->assertInertia(fn (Assert $page) => $page->has('clients', 1)->etc());
-        $this->get('/players')->assertInertia(fn (Assert $page) => $page->has('players', 1)->etc());
-        $this->get('/teams')->assertInertia(fn (Assert $page) => $page->has('teams', 1)->etc());
+        $this->get('/clients')->assertInertia(fn (Assert $page) => $page->has('clients', 8)->etc());
+        $this->get('/players')->assertInertia(fn (Assert $page) => $page->has('players', 8)->etc());
+        $this->get('/teams')->assertInertia(fn (Assert $page) => $page->has('teams', 2)->etc());
         $this->get('/products/cafe')->assertInertia(fn (Assert $page) => $page->has('products', 1)->etc());
-        $this->get('/courts')->assertInertia(fn (Assert $page) => $page->has('courts', 1)->etc());
+        $this->get('/courts')->assertInertia(fn (Assert $page) => $page->has('courts', 3)->etc());
         $this->get('/memberships')->assertInertia(fn (Assert $page) => $page->has('plans', 1)->etc());
         $this->get('/stock')->assertInertia(fn (Assert $page) => $page->has('items', 1)->etc());
         $this->get('/suppliers')->assertInertia(fn (Assert $page) => $page->has('suppliers', 1)->etc());
-        $this->get('/schedule')->assertInertia(fn (Assert $page) => $page->has('courts', 1)->has('bookings', 1)->etc());
+        $this->get('/schedule')->assertInertia(fn (Assert $page) => $page->has('courts', 3)->has('bookings', 22)->etc());
         $this->get('/history/purchases')->assertInertia(fn (Assert $page) => $page->has('transactions', 1)->etc());
-        $this->get('/history/expenses')->assertInertia(fn (Assert $page) => $page->has('expenses', 1)->etc());
+        $this->get('/history/expenses')->assertInertia(fn (Assert $page) => $page->has('expenses', 7)->etc());
         $this->get('/history/reconciliation')->assertInertia(fn (Assert $page) => $page->has('reconciliation', 1)->etc());
-        $this->get('/reports/bookings')->assertInertia(fn (Assert $page) => $page->has('rows', 1)->etc());
-        $this->get('/reports/cafe')->assertInertia(fn (Assert $page) => $page->has('rows', 1)->etc());
+        $this->get('/reports/bookings')->assertInertia(fn (Assert $page) => $page->has('rows', 22)->etc());
+        $this->get('/reports/cafe')->assertInertia(fn (Assert $page) => $page->has('rows', 7)->etc());
+        $this->get('/')->assertInertia(fn (Assert $page) => $page
+            ->where('metrics.today_bookings', 3)
+            ->where('metrics.revenue_today', 60)
+            ->where('metrics.cafe_revenue', 10)
+            ->has('analytics.week', 7)
+            ->has('analytics.courts', 3)
+            ->etc());
     }
 }

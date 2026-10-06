@@ -5,6 +5,12 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
     // Resolve chunk preloads beside the bundle, including under /padel.
     base: './',
+    server: {
+        host: 'localhost',
+        hmr: {
+            host: 'localhost',
+        },
+    },
     build: {
         // Open browser tabs can still request chunks from the previous build.
         emptyOutDir: false,

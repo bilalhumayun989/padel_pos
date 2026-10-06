@@ -27,6 +27,8 @@ use Illuminate\Support\Str;
 
 class DemoController extends Controller
 {
+    private const WORKSPACE_VERSION = 2;
+
     public function enter()
     {
         $demo = User::firstOrCreate(['email' => 'demo@skylinepadel.com'], [
@@ -35,10 +37,11 @@ class DemoController extends Controller
             'email_verified_at' => now(),
         ]);
 
-        if (! Session::has('demo_workspace')) {
+        if (Session::get('demo_workspace_version') !== self::WORKSPACE_VERSION) {
             $workspace = $this->provisionDefaults($demo);
             Session::forget('demo_usage');
             DemoWorkspace::set($workspace);
+            Session::put('demo_workspace_version', self::WORKSPACE_VERSION);
         }
 
         Auth::guard('web')->login($demo, true);
@@ -198,19 +201,110 @@ class DemoController extends Controller
             'is_demo' => true,
         ]);
 
+        $demoClients = collect([$client]);
+        foreach (['Alex Morgan', 'Jamie Lee', 'Taylor Smith', 'Jordan Williams', 'Casey Brown', 'Riley Davis', 'Morgan Wilson'] as $index => $name) {
+            $demoClients->push(Client::create([
+                'name' => $name,
+                'email' => 'demo.client.' . $sessionToken . '.' . ($index + 2) . '@example.com',
+                'phone' => '+1 555-02' . str_pad((string) ($index + 10), 2, '0', STR_PAD_LEFT),
+                'status' => 'active',
+                'last_visit' => today()->subDays($index % 5),
+                'is_demo' => true,
+            ]));
+        }
+
+        $demoCourts = collect([$court]);
+        foreach ([['Demo Court 2', 'indoor', 70], ['Demo Court 3', 'outdoor', 55]] as [$name, $type, $hourlyRate]) {
+            $demoCourts->push(Court::create([
+                'name' => $name,
+                'type' => $type,
+                'hourly_rate' => $hourlyRate,
+                'status' => 'available',
+                'is_demo' => true,
+            ]));
+        }
+
+        $secondTeam = Team::create([
+            'name' => 'Demo Challengers',
+            'max_players' => 4,
+            'color' => '#38bdf8',
+            'status' => 'active',
+            'is_demo' => true,
+        ]);
+        $demoTeams = collect([$team, $secondTeam]);
+        $demoPlayers = collect([$player]);
+        foreach ($demoTeams as $teamIndex => $demoTeam) {
+            for ($playerIndex = $teamIndex === 0 ? 2 : 1; $playerIndex <= 4; $playerIndex++) {
+                $demoPlayers->push(Player::create([
+                    'team_id' => $demoTeam->id,
+                    'name' => 'Demo ' . ($teamIndex === 0 ? 'Staff' : 'Challenger') . ' ' . $playerIndex,
+                    'position' => $playerIndex % 2 === 0 ? 'Left' : 'Right',
+                    'status' => 'active',
+                    'skill_level' => 2 + ($playerIndex % 3),
+                    'is_demo' => true,
+                ]));
+            }
+        }
+
+        $dashboardBookings = collect([$booking]);
+        foreach (range(-6, 0) as $dayOffset) {
+            foreach ($demoCourts as $courtIndex => $demoCourt) {
+                $startHour = 9 + (($courtIndex + abs($dayOffset)) % 3) * 3;
+                $bookingDate = today()->addDays($dayOffset);
+                $startTime = sprintf('%02d:00:00', $startHour);
+                $endTime = sprintf('%02d:00:00', $startHour + 1);
+                $dashboardBookings->push(Booking::create([
+                    'court_id' => $demoCourt->id,
+                    'client_id' => $demoClients[($courtIndex + abs($dayOffset)) % $demoClients->count()]->id,
+                    'team_id' => $demoTeams[$courtIndex % $demoTeams->count()]->id,
+                    'booking_date' => $bookingDate,
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'status' => $dayOffset < 0 || ($dayOffset === 0 && $courtIndex === 0) ? 'completed' : 'confirmed',
+                    'total_amount' => $demoCourt->hourly_rate,
+                    'players' => 4,
+                    'payment_type' => 'cash',
+                    'notes' => 'Demo dashboard session',
+                    'is_demo' => true,
+                ]));
+            }
+        }
+
+        $dashboardOrders = collect([$order]);
+        $dashboardExpenses = collect([$expense]);
+        foreach (range(-6, -1) as $dayOffset) {
+            $activityDate = today()->addDays($dayOffset);
+            $dashboardOrders->push(CafeOrder::create([
+                'client_id' => $demoClients[abs($dayOffset) % $demoClients->count()]->id,
+                'order_date' => $activityDate,
+                'items_summary' => '2x Demo Service',
+                'total_amount' => 20,
+                'status' => 'completed',
+                'is_demo' => true,
+            ]));
+            $dashboardExpenses->push(Expense::create([
+                'description' => 'Demo operating expense',
+                'amount' => 12 + abs($dayOffset),
+                'category' => 'maintenance',
+                'expense_date' => $activityDate,
+                'reference' => 'DEMO-DAILY-' . $sessionToken . '-' . abs($dayOffset),
+                'is_demo' => true,
+            ]));
+        }
+
         return [
-            'clients' => [$client->id],
+            'clients' => $demoClients->pluck('id')->all(),
             'membership_plans' => [$plan->id],
             'stock_items' => [$product->id],
             'suppliers' => [$supplier->id],
-            'courts' => [$court->id],
-            'teams' => [$team->id],
-            'players' => [$player->id],
-            'bookings' => [$booking->id],
+            'courts' => $demoCourts->pluck('id')->all(),
+            'teams' => $demoTeams->pluck('id')->all(),
+            'players' => $demoPlayers->pluck('id')->all(),
+            'bookings' => $dashboardBookings->pluck('id')->all(),
             'memberships' => [$membership->id],
-            'cafe_orders' => [$order->id],
+            'cafe_orders' => $dashboardOrders->pluck('id')->all(),
             'cafe_order_items' => [$orderItem->id],
-            'expenses' => [$expense->id],
+            'expenses' => $dashboardExpenses->pluck('id')->all(),
             'purchases' => [$purchase->id],
             'reconciliations' => [$reconciliation->id],
             'support_tickets' => [$ticket->id],
